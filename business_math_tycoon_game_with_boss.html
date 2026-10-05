@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Math Tycoon with Executive Boss</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .game-card { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
+        .dark-card { backdrop-filter: blur(10px); background: rgba(30, 41, 59, 0.95); }
+        canvas.scratchpad { touch-action: none; cursor: crosshair; }
+        
+        /* Boss Avatar Pulse / Expression Animations */
+        @keyframes bounceSlow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .boss-anim { animation: bounceSlow 3s ease-in-out infinite; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+        .boss-shake { animation: shake 0.4s ease-in-out; }
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+        .boss-celebrate { animation: celebrate 0.5s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6">
+
+    <header class="w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center bg-slate-800/80 border border-slate-700 p-4 rounded-2xl shadow-xl mb-4 backdrop-blur">
+        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl font-extrabold text-xl shadow-lg">📈</div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Business Math Tycoon</h1>
+                <p class="text-xs text-indigo-300">Corporate Finance + Executive Boardroom Director</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-900/90 border border-slate-700 px-4 py-2 rounded-xl text-center shadow-inner">
+                <span class="text-xs text-slate-400 block">Company Capital</span>
+                <span id="cashDisplay" class="text-lg font-extrabold text-emerald-400">$50,000</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-700 px-4 py-2 rounded-xl text-center shadow-inner">
+                <span class="text-xs text-slate-400 block">Tycoon Target</span>
+                <span id="targetDisplay" class="text-lg font-extrabold text-amber-400">$150,000</span>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-700 px-4 py-2 rounded-xl text-center shadow-inner">
+                <span class="text-xs text-slate-400 block">Challenge Stage</span>
+                <span id="levelDisplay" class="text-lg font-extrabold text-indigo-400">1 / 5</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl flex-grow flex flex-col lg:flex-row gap-6 items-start justify-center">
+        
+        <!-- Left Column: Game & Challenge Screen -->
+        <div id="gameContainer" class="w-full lg:w-7/12 dark-card border border-slate-700/80 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
+            
+            <!-- Welcome / Start Screen -->
+            <div id="startScreen" class="text-center py-6">
+                <div class="inline-block p-4 bg-indigo-600/20 text-indigo-400 rounded-full text-4xl mb-4 border border-indigo-500/30">👔</div>
+                <h2 class="text-3xl font-extrabold mb-3 text-white">Executive Director Edition: Business Math Tycoon</h2>
+                <p class="text-slate-300 max-w-xl mx-auto mb-6 text-sm sm:text-base leading-relaxed">
+                    Meet Director Vance, your discerning corporate executive! Solve randomized financial math challenges correctly and show your working notes. Impress her with precise calculations to earn promotions, or face strict corporate reprimands!
+                </p>
+                <!-- Objective & Reward Tier Banner -->
+                <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 text-indigo-200 text-xs sm:text-sm text-left flex items-start space-x-3">
+                    <span class="text-xl">🏆</span>
+                    <div>
+                        <strong class="block font-bold text-indigo-100 mb-1">Corporate Evaluation Rules:</strong>
+                        <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                            <li><strong>100% Reward:</strong> Correct Answer + Valid Working Notes.</li>
+                            <li><strong>25% Reward:</strong> Correct Answer without Working / Partial working.</li>
+                            <li><strong>0% Reward:</strong> Wrong answer or invalid working (Boss gets stern!).</li>
+                            <li><strong>Final Promotion:</strong> Hit target ($150k) to get promoted to Executive Partner!</li>
+                        </ul>
+                    </div>
+                </div>
+                <button onclick="startGame()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition transform hover:-translate-y-0.5">
+                    Enter Boardroom & Start 🚀
+                </button>
+            </div>
+
+            <!-- Step-by-Step Challenge Screen -->
+            <div id="quizScreen" class="hidden">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                    <div>
+                        <span id="challengeCategory" class="text-xs font-semibold px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 uppercase tracking-wider">Category</span>
+                        <h3 id="challengeTitle" class="text-xl font-bold text-white mt-2">Challenge Title</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Step Reward</span>
+                        <span id="stepRewardDisplay" class="text-emerald-400 font-bold">$5,000</span>
+                    </div>
+                </div>
+
+                <!-- Problem Context Box -->
+                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl mb-6 shadow-inner">
+                    <p id="challengeProblem" class="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+                        Problem context description...
+                    </p>
+                </div>
+
+                <!-- Active Step Box -->
+                <div class="bg-slate-800/90 border border-indigo-500/40 p-6 rounded-2xl mb-6 shadow-xl relative">
+                    <div class="flex items-center justify-between mb-3">
+                        <span id="stepIndicator" class="text-xs font-bold text-indigo-400 bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">Step 1 of 3</span>
+                        <span class="text-xs text-slate-400">Select option & check working</span>
+                    </div>
+                    <h4 id="stepPrompt" class="text-base sm:text-lg font-bold text-white mb-4">
+                        Step question prompt goes here...
+                    </h4>
+                </div>
+
+                <!-- Multiple Choice Options Container -->
+                <div class="mb-6">
+                    <span class="text-xs font-semibold text-slate-400 block mb-3 uppercase tracking-wider">Select Your Answer:</span>
+                    <div id="optionsContainer" class="flex flex-col gap-3">
+                        <!-- Dynamically populated multiple choice option buttons -->
+                    </div>
+                </div>
+
+                <!-- Feedback Box -->
+                <div id="feedbackBox" class="hidden p-4 rounded-xl mb-6 text-sm font-medium"></div>
+
+                <!-- Action Button -->
+                <div class="flex justify-end">
+                    <button id="nextStepBtn" onclick="nextStep()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition">
+                        Next Step ➡️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Over / Victory / Evaluation Screen -->
+            <div id="endScreen" class="hidden text-center py-8">
+                <div id="endIcon" class="inline-block p-4 bg-emerald-500/20 text-emerald-400 rounded-full text-4xl mb-4 border border-emerald-500/30">🏆</div>
+                <h2 id="endTitle" class="text-3xl font-extrabold mb-3 text-white">Boardroom Evaluation Result</h2>
+                <p id="endMessage" class="text-slate-300 max-w-lg mx-auto mb-8 text-sm sm:text-base leading-relaxed">
+                    Evaluation summary goes here...
+                </p>
+                <div id="endActionContainer" class="flex justify-center space-x-4">
+                    <!-- Dynamic action buttons (Play Again / Redo / Accept Promotion) -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Boss Person Widget + Larger Notepad -->
+        <div class="w-full lg:w-5/12 flex flex-col gap-6">
+            
+            <!-- Executive Boss Widget -->
+            <div id="bossWidget" class="bg-slate-900/90 border border-slate-700 rounded-3xl p-5 shadow-2xl flex items-center space-x-4 transition-all duration-300">
+                <!-- Boss Portrait / Photo Frame -->
+                <div id="bossAvatarContainer" class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-slate-950 border-2 border-indigo-500/50 flex items-center justify-center shadow-xl boss-anim overflow-hidden flex-shrink-0">
+                    <img id="bossPortraitImg" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80" class="w-full h-full object-cover filter contrast-105 brightness-95 transition-transform duration-300" alt="Director Vance">
+                    <!-- Status Badge -->
+                    <div id="bossMoodBadge" class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow">
+                        Observing
+                    </div>
+                </div>
+                <!-- Boss Speech Bubble -->
+                <div class="flex-grow bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-inner relative">
+                    <!-- Speech Triangle Pointer -->
+                    <div class="absolute -left-2.5 top-6 w-0 h-0 border-t-[8px] border-t-transparent border-r-[10px] border-r-slate-800 border-b-[8px] border-b-transparent"></div>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold text-indigo-300 tracking-wide uppercase">Director Vance (Boss)</span>
+                        <span id="bossTitleBadge" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">Executive Director</span>
+                    </div>
+                    <p id="bossDialogue" class="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">
+                        "Show me your financial calculations. I expect professional accuracy in our firm!"
+                    </p>
+                </div>
+            </div>
+
+            <!-- Working Notepad Widget -->
+            <div class="bg-slate-900/90 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col">
+                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🤖</span>
+                        <h3 class="font-bold text-white text-base">Working Notepad & AI Inspector</h3>
+                    </div>
+                    <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-medium">Auto-clears per step</span>
+                </div>
+
+                <!-- Warning Notice Banner -->
+                <div class="bg-indigo-950/80 border border-indigo-500/40 rounded-xl p-3 mb-4 text-indigo-200 text-xs leading-relaxed flex items-start space-x-2">
+                    <span class="text-base">💡</span>
+                    <p><strong>Working Policy:</strong> Correct answer without working earns only <strong>25% reward</strong>. Full 100% reward requires both correct answer and valid working notes! Unverified or missing working incurs capital deductions.</p>
+                </div>
+
+                <!-- Notepad Toolbar -->
+                <div class="flex items-center justify-between mb-3 bg-slate-800/80 p-2 rounded-xl border border-slate-700">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="setTool('pen')" id="penBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition">🖊️ Pen</button>
+                        <button onclick="setTool('eraser')" id="eraserBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">🧹 Eraser</button>
+                        <input type="color" id="colorPicker" value="#6366f1" class="w-7 h-7 rounded border-0 cursor-pointer bg-transparent">
+                    </div>
+                    <button onclick="clearCanvas()" class="text-xs bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-300 px-3 py-1.5 rounded-lg transition font-medium">Clear Canvas</button>
+                </div>
+
+                <!-- Expanded Drawing Canvas -->
+                <div class="relative w-full h-[360px] bg-slate-950 border border-slate-700 rounded-2xl overflow-hidden shadow-inner mb-4 flex items-center justify-center">
+                    <canvas id="scratchpadCanvas" class="scratchpad w-full h-full"></canvas>
+                    <div id="uploadedImagePreviewContainer" class="absolute inset-0 hidden bg-slate-950/90 flex items-center justify-center p-2">
+                        <img id="uploadedImagePreview" class="max-h-full max-w-full object-contain rounded-xl border border-slate-700" alt="Uploaded Working">
+                        <button onclick="removeUploadedImage()" class="absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1.5 text-xs shadow-lg hover:bg-rose-500">❌</button>
+                    </div>
+                </div>
+
+                <!-- Upload Image Working Option -->
+                <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
+                    <span class="text-xs text-slate-300 font-semibold mb-2">Alternatively, upload photo of written working:</span>
+                    <label class="cursor-pointer bg-slate-700 hover:bg-indigo-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2">
+                        <span>📤 Upload Image Proof</span>
+                        <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    </label>
+                    <span id="uploadStatusText" class="text-[11px] text-slate-400 mt-2">No file uploaded yet.</span>
+                </div>
+
+                <!-- AI Status Box -->
+                <div id="aiWorkingStatusBox" class="mt-4 p-3 rounded-xl bg-slate-800/90 border border-slate-700 text-xs text-slate-300 flex items-center justify-between">
+                    <span>AI Inspector: <strong id="aiCheckText" class="text-amber-400">Waiting for answer & working...</strong></span>
+                    <span id="aiMetricsBadge" class="font-bold text-slate-400">0 strokes</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-7xl text-center text-xs text-slate-500 mt-6">
+        Business Math Tycoon &bull; Executive Boardroom Director Edition
+    </footer>
+
+    <script>
+        let currentLevel = 0;
+        let currentStepIndex = 0;
+        let playerCash = 50000;
+        const TARGET_CAPITAL = 150000;
+        let dynamicChallenges = [];
+        let currentChallenge = null;
+        let isAnswerLocked = false;
+
+        // Scratchpad state & stroke metrics
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentTool = 'pen';
+        let strokeCount = 0;
+        let totalPathLength = 0;
+        let lastX = 0, lastY = 0;
+        let hasUploadedImage = false;
+
+        // Boss Dialogue Pool & Imagery
+        const bossDialogues = {
+            neutral: [
+                "Show me your financial calculations. I expect professional rigor in our firm!",
+                "Review the business metrics thoroughly before you commit corporate capital.",
+                "Precision is paramount in executive finance. Proceed carefully."
+            ],
+            happy: [
+                "Splendid calculation! Our corporate profits are robust!",
+                "Magnificent! That is how an exceptional financial analyst operates!",
+                "Impressive work! You are securing our future market dominance!"
+            ],
+            angry: [
+                "Unacceptable! Are these financial projections a joke to you?!",
+                "Subpar performance! Check your calculations immediately or face strict review!",
+                "What kind of careless arithmetic is this?! Fix your figures right now!"
+            ],
+            encouragement: [
+                "You are remarkably close to our corporate growth target. Push through the final hurdle!",
+                "Solid overall effort. Refine your algebraic precision slightly and you'll reach the apex!"
+            ],
+            furiousLow: [
+                "Your final capital is far below acceptable standards! This firm cannot tolerate such losses. Redo this evaluation at once!",
+                "Unsatisfactory boardroom performance! Report back after reviewing your formulas!"
+            ],
+            promotion: [
+                "Outstanding! You exceeded our corporate target! I hereby promote you to Executive Partner!",
+                "Brilliant milestone achieved! You are promoted to Senior Vice President of Corporate Finance!"
+            ]
+        };
+
+        function setBossMood(mood, customMsg = null) {
+            let badgeEl = document.getElementById('bossMoodBadge');
+            let containerEl = document.getElementById('bossAvatarContainer');
+            let dialogueEl = document.getElementById('bossDialogue');
+            let widgetEl = document.getElementById('bossWidget');
+            let portraitImg = document.getElementById('bossPortraitImg');
+
+            // Remove existing anim classes
+            containerEl.classList.remove('boss-shake', 'boss-celebrate', 'boss-anim');
+            widgetEl.className = "bg-slate-900/90 border border-slate-700 rounded-3xl p-5 shadow-2xl flex items-center space-x-4 transition-all duration-300";
+
+            let msg = customMsg;
+
+            if (mood === 'neutral') {
+                badgeEl.innerText = "Observing";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-anim');
+                portraitImg.style.filter = "contrast(1.05) brightness(95%)";
+                if (!msg) msg = bossDialogues.neutral[Math.floor(Math.random() * bossDialogues.neutral.length)];
+            } else if (mood === 'happy') {
+                badgeEl.innerText = "Delighted";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-celebrate');
+                widgetEl.classList.add('border-emerald-500/80', 'bg-emerald-950/20');
+                portraitImg.style.filter = "contrast(1.1) brightness(105%) hue-rotate(10deg)";
+                if (!msg) msg = bossDialogues.happy[Math.floor(Math.random() * bossDialogues.happy.length)];
+            } else if (mood === 'angry') {
+                badgeEl.innerText = "Furious";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-shake');
+                widgetEl.classList.add('border-rose-500/80', 'bg-rose-950/20');
+                portraitImg.style.filter = "contrast(1.15) brightness(90%) hue-rotate(-20deg)";
+                if (!msg) msg = bossDialogues.angry[Math.floor(Math.random() * bossDialogues.angry.length)];
+            } else if (mood === 'encouragement') {
+                badgeEl.innerText = "Encouraging";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-amber-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-anim');
+                widgetEl.classList.add('border-amber-500/80', 'bg-amber-950/20');
+                portraitImg.style.filter = "contrast(1.05) brightness(100%)";
+                if (!msg) msg = bossDialogues.encouragement[Math.floor(Math.random() * bossDialogues.encouragement.length)];
+            } else if (mood === 'furiousLow') {
+                badgeEl.innerText = "Outraged";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-rose-700 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-shake');
+                widgetEl.classList.add('border-rose-600', 'bg-rose-950/30');
+                portraitImg.style.filter = "contrast(1.2) brightness(85%) hue-rotate(-30deg)";
+                if (!msg) msg = bossDialogues.furiousLow[Math.floor(Math.random() * bossDialogues.furiousLow.length)];
+            } else if (mood === 'promotion') {
+                badgeEl.innerText = "Promoted!";
+                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold rounded uppercase tracking-wider shadow";
+                containerEl.classList.add('boss-celebrate');
+                widgetEl.classList.add('border-amber-400', 'bg-amber-950/30');
+                portraitImg.style.filter = "contrast(1.15) brightness(110%) saturate(120%)";
+                if (!msg) msg = bossDialogues.promotion[Math.floor(Math.random() * bossDialogues.promotion.length)];
+            }
+
+            dialogueEl.innerText = `"${msg}"`;
+        }
+
+        function randomInt(min, max, step = 1) {
+            return Math.floor(Math.random() * ((max - min) / step + 1)) * step + min;
+        }
+
+        function generateRandomizedChallenges() {
+            let cost1 = randomInt(5, 9, 1) * 100000;
+            let scrap1 = randomInt(1, 4, 1) * 40000;
+            let years1 = randomInt(5, 10, 1);
+            let rate1 = Math.round((cost1 - scrap1) / years1);
+            let targetYear1 = randomInt(3, years1 - 1, 1);
+            let valTarget1 = cost1 - rate1 * targetYear1;
+
+            let distRate1_1 = rate1 + randomInt(5, 15, 1) * 1000;
+            let distRate1_2 = Math.max(10000, rate1 - randomInt(5, 15, 1) * 1000);
+
+            let fixedCost2 = randomInt(3, 8, 1) * 10000;
+            let prodCost2 = randomInt(5, 12, 1);
+            let sellPrice2 = prodCost2 + randomInt(4, 9, 1);
+            let margin2 = sellPrice2 - prodCost2;
+            let breakEven2 = Math.round(fixedCost2 / margin2 / 1000) * 1000;
+            let exactBreakEven = Math.round(fixedCost2 / margin2);
+            let soldUnits2 = breakEven2 + randomInt(2, 5, 1) * 1000;
+            let profit2 = soldUnits2 * sellPrice2 - (fixedCost2 + soldUnits2 * prodCost2);
+
+            let a3 = parseFloat((randomInt(1, 3, 1) * 0.05).toFixed(2));
+            let b3 = parseFloat((randomInt(2, 8, 1) * 0.1).toFixed(1));
+            let c3 = randomInt(10, 25, 5);
+            let q3 = randomInt(4, 8, 1);
+            let p3 = parseFloat((a3 * (q3 * q3) + b3 * q3 + c3).toFixed(2));
+
+            let b4 = randomInt(1, 4, 1);
+            let eqX4 = randomInt(4, 8, 1);
+            let slope4 = randomInt(6, 12, 1);
+            let d4 = randomInt(20, 40, 5);
+            let eqP4 = slope4 * eqX4 + d4;
+            let c4 = eqP4 + (eqX4 * eqX4) + (b4 * eqX4);
+            let quadSumConst4 = c4 - d4; 
+            let sumCoeff4 = b4 + slope4;
+
+            let a5 = parseFloat((randomInt(1, 3, 1) * 0.007).toFixed(3));
+            let b5 = parseFloat((randomInt(1, 4, 1) * 0.015).toFixed(3));
+            let c5 = parseFloat((randomInt(1, 5, 1) * 0.04).toFixed(2));
+            let d5 = parseFloat((randomInt(1, 5, 1) * 0.03).toFixed(2));
+            let tYear5 = randomInt(6, 9, 1);
+            let trafficYear5 = parseFloat((a5 * Math.pow(tYear5, 3) + b5 * Math.pow(tYear5, 2) + c5 * tYear5 + d5).toFixed(3));
+
+            dynamicChallenges = [
+                {
+                    category: "Linear Depreciation",
+                    title: "Asset Depreciation Model",
+                    rewardPerStep: 5000,
+                    problem: `A corporate enterprise purchased an operating system at a cost of $${cost1.toLocaleString()} and has a scrap value of $${scrap1.toLocaleString()} at the end of ${years1} years in a linear fashion.`,
+                    steps: [
+                        {
+                            prompt: `(a) Find the rate of depreciation ($ per year).`,
+                            correct: `$${rate1.toLocaleString()} / year`,
+                            options: [`$${distRate1_1.toLocaleString()} / year`, `$${rate1.toLocaleString()} / year`, `$${distRate1_2.toLocaleString()} / year`],
+                            explanation: `Rate = ($${cost1.toLocaleString()} - $${scrap1.toLocaleString()}) / ${years1} = $${(cost1 - scrap1).toLocaleString()} / ${years1} = $${rate1.toLocaleString()}/year.`
+                        },
+                        {
+                            prompt: `(b) Find an expression giving the book value of the operating system at the end of t years V(t).`,
+                            correct: `V(t) = ${cost1.toLocaleString()} - ${rate1.toLocaleString()}t`,
+                            options: [`V(t) = ${cost1.toLocaleString()} - ${rate1.toLocaleString()}t`, `V(t) = ${scrap1.toLocaleString()} + ${rate1.toLocaleString()}t`, `V(t) = ${(cost1 - scrap1).toLocaleString()} - ${rate1.toLocaleString()}t`],
+                            explanation: `Initial cost is $${cost1.toLocaleString()} and it decreases by $${rate1.toLocaleString()} each year, so V(t) = ${cost1.toLocaleString()} - ${rate1.toLocaleString()}t.`
+                        },
+                        {
+                            prompt: `(c) Find the book value of the operating system at the end of the ${targetYear1}-th year ($).`,
+                            correct: `$${valTarget1.toLocaleString()}`,
+                            options: [`$${(valTarget1 - rate1).toLocaleString()}`, `$${valTarget1.toLocaleString()}`, `$${(valTarget1 + rate1).toLocaleString()}`],
+                            explanation: `V(${targetYear1}) = ${cost1.toLocaleString()} - ${rate1.toLocaleString()}(${targetYear1}) = $${valTarget1.toLocaleString()}.`
+                        }
+                    ]
+                },
+                {
+                    category: "Cost, Revenue & Profit",
+                    title: "Automated Wiper Manufacturing",
+                    rewardPerStep: 7000,
+                    problem: `AutoWipes has a monthly fixed cost of $${fixedCost2.toLocaleString()} and a production cost of $${prodCost2} for each wiper manufactured. Each unit sells for $${sellPrice2}.`,
+                    steps: [
+                        {
+                            prompt: `(a) Find expressions for total cost C(x), revenue R(x), and profit P(x).`,
+                            correct: `C(x) = ${fixedCost2} + ${prodCost2}x, R(x) = ${sellPrice2}x, P(x) = ${margin2}x - ${fixedCost2}`,
+                            options: [
+                                `C(x) = ${fixedCost2} + ${sellPrice2}x, R(x) = ${prodCost2}x, P(x) = -${margin2}x + ${fixedCost2}`,
+                                `C(x) = ${fixedCost2} + ${prodCost2}x, R(x) = ${sellPrice2}x, P(x) = ${margin2}x - ${fixedCost2}`,
+                                `C(x) = ${prodCost2}x + ${fixedCost2}, R(x) = ${margin2}x, P(x) = ${sellPrice2}x - ${fixedCost2}`
+                            ],
+                            explanation: `Cost C(x) = ${fixedCost2} + ${prodCost2}x. Revenue R(x) = ${sellPrice2}x. Profit P(x) = R(x) - C(x) = ${margin2}x - ${fixedCost2}.`
+                        },
+                        {
+                            prompt: `(b) Find the break-even point (units of wipers, rounded to nearest thousand).`,
+                            correct: `${breakEven2.toLocaleString()} units`,
+                            options: [`${(breakEven2 - 2000).toLocaleString()} units`, `${breakEven2.toLocaleString()} units`, `${(breakEven2 + 2000).toLocaleString()} units`],
+                            explanation: `Set Profit P(x) = 0 => ${margin2}x = ${fixedCost2} => x = ${exactBreakEven.toLocaleString()} (~${breakEven2.toLocaleString()} units).`
+                        },
+                        {
+                            prompt: `(c) The company sells ${soldUnits2.toLocaleString()} wipers in December. Find the profit realised ($).`,
+                            correct: `$${profit2.toLocaleString()}`,
+                            options: [`$${(profit2 - 5000).toLocaleString()}`, `$${profit2.toLocaleString()}`, `$${(profit2 + 8000).toLocaleString()}`],
+                            explanation: `P(${soldUnits2.toLocaleString()}) = ${margin2}(${soldUnits2.toLocaleString()}) - ${fixedCost2.toLocaleString()} = $${profit2.toLocaleString()}.`
+                        }
+                    ]
+                },
+                {
+                    category: "Supply & Demand",
+                    title: "Torchlight Market Analysis",
+                    rewardPerStep: 8000,
+                    problem: `The supply function for torchlights is given by p = ${a3}x² + ${b3}x + ${c3}, where x is quantity supplied (in thousands) and p is unit price in dollars.`,
+                    steps: [
+                        {
+                            prompt: `(a) Identify the base fixed price intercept (y-intercept) when x = 0 ($).`,
+                            correct: `$${c3.toFixed(2)}`,
+                            options: [`$${(c3 - 5).toFixed(2)}`, `$${c3.toFixed(2)}`, `$${(c3 + 5).toFixed(2)}`],
+                            explanation: `When x = 0, p = ${a3}(0)² + ${b3}(0) + ${c3} = $${c3.toFixed(2)}.`
+                        },
+                        {
+                            prompt: `(b) What unit price will induce the supplier to make ${q3},000 torchlights available (x = ${q3}) ($)?`,
+                            correct: `$${p3.toFixed(2)}`,
+                            options: [`$${(p3 - 2.5).toFixed(2)}`, `$${p3.toFixed(2)}`, `$${(p3 + 3.0).toFixed(2)}`],
+                            explanation: `For x = ${q3}, p = ${a3}(${q3 * q3}) + ${b3}(${q3}) + ${c3} = $${p3.toFixed(2)}.`
+                        },
+                        {
+                            prompt: `(c) What is the unit price when supply quantity reaches ${(q3 + 5)},000 units (x = ${q3 + 5}) ($)?`,
+                            correct: `$${(a3 * Math.pow(q3 + 5, 2) + b3 * (q3 + 5) + c3).toFixed(2)}`,
+                            options: [`$${(a3 * Math.pow(q3 + 5, 2) + b3 * (q3 + 5) + c3 - 4).toFixed(2)}`, `$${(a3 * Math.pow(q3 + 5, 2) + b3 * (q3 + 5) + c3).toFixed(2)}`, `$${(a3 * Math.pow(q3 + 5, 2) + b3 * (q3 + 5) + c3 + 6).toFixed(2)}`],
+                            explanation: `For x = ${q3 + 5}, substitute into p = ${a3}x² + ${b3}x + ${c3} to get $${(a3 * Math.pow(q3 + 5, 2) + b3 * (q3 + 5) + c3).toFixed(2)}.`
+                        }
+                    ]
+                },
+                {
+                    category: "Market Equilibrium",
+                    title: "Electric Shavers Equilibrium",
+                    rewardPerStep: 10000,
+                    problem: `Demand function: p = -x² - ${b4}x + ${c4}. Supply function: p = ${slope4}x + ${d4} (x in thousands, p in dollars).`,
+                    steps: [
+                        {
+                            prompt: `(a) Set demand equal to supply to form the characteristic quadratic equation.`,
+                            correct: `x² + ${sumCoeff4}x - ${quadSumConst4} = 0`,
+                            options: [`x² - ${sumCoeff4}x + ${quadSumConst4} = 0`, `x² + ${sumCoeff4}x - ${quadSumConst4} = 0`, `2x² + ${slope4}x - ${(quadSumConst4 + 10)} = 0`],
+                            explanation: `Equating -x² - ${b4}x + ${c4} = ${slope4}x + ${d4} simplifies to x² + ${sumCoeff4}x - ${quadSumConst4} = 0.`
+                        },
+                        {
+                            prompt: `(b) Solve for the valid positive equilibrium quantity x (in thousands).`,
+                            correct: `${eqX4} thousand units`,
+                            options: [`${Math.max(1, eqX4 - 2)} thousand units`, `${eqX4} thousand units`, `${eqX4 + 2} thousand units`],
+                            explanation: `Solving x² + ${sumCoeff4}x - ${quadSumConst4} = 0 gives positive root x = ${eqX4} thousand units.`
+                        },
+                        {
+                            prompt: `(c) Find the corresponding market equilibrium price p ($).`,
+                            correct: `$${eqP4.toFixed(2)}`,
+                            options: [`$${(eqP4 - 10).toFixed(2)}`, `$${eqP4.toFixed(2)}`, `$${(eqP4 + 12).toFixed(2)}`],
+                            explanation: `Substituting x = ${eqX4} into supply p = ${slope4}(${eqX4}) + ${d4} = $${eqP4.toFixed(2)}.`
+                        }
+                    ]
+                },
+                {
+                    category: "Polynomial Modeling",
+                    title: "Global Mobile Data Traffic Forecasting",
+                    rewardPerStep: 12000,
+                    problem: `Global mobile data traffic is modeled by f(t) = ${a5}t³ + ${b5}t² + ${c5}t + ${d5} (0 ≤ t ≤ 10, million terabytes/month, t=0 is year 2015).`,
+                    steps: [
+                        {
+                            prompt: `(a) What was the total global mobile traffic at t = 0 (base year)?`,
+                            correct: `${d5} million terabytes/month`,
+                            options: [`0.00 million terabytes/month`, `${d5} million terabytes/month`, `${(d5 + 0.1).toFixed(2)} million terabytes/month`],
+                            explanation: `For t = 0, f(0) = 0 + 0 + 0 + ${d5} = ${d5} million terabytes/month.`
+                        },
+                        {
+                            prompt: `(b) Evaluate traffic at t = 1 year.`,
+                            correct: `${(a5 + b5 + c5 + d5).toFixed(3)} million terabytes/month`,
+                            options: [`${(a5 + b5 + c5 + d5 - 0.05).toFixed(3)} million terabytes/month`, `${(a5 + b5 + c5 + d5).toFixed(3)} million terabytes/month`, `${(a5 + b5 + c5 + d5 + 0.08).toFixed(3)} million terabytes/month`],
+                            explanation: `For t = 1, f(1) = ${a5}(1) + ${b5}(1) + ${c5}(1) + ${d5} = ${(a5 + b5 + c5 + d5).toFixed(3)}.`
+                        },
+                        {
+                            prompt: `(c) Calculate the total global mobile traffic at t = ${tYear5} years?`,
+                            correct: `${trafficYear5} million terabytes/month`,
+                            options: [`${(trafficYear5 - 1.5).toFixed(3)} million terabytes/month`, `${trafficYear5} million terabytes/month`, `${(trafficYear5 + 2.0).toFixed(3)} million terabytes/month`],
+                            explanation: `For t = ${tYear5}, f(${tYear5}) = ${a5}(${Math.pow(tYear5,3)}) + ${b5}(${Math.pow(tYear5,2)}) + ${c5}(${tYear5}) + ${d5} = ${trafficYear5} million terabytes/month.`
+                        }
+                    ]
+                }
+            ];
+        }
+
+        window.onload = function() {
+            initCanvas();
+        };
+
+        function initCanvas() {
+            canvas = document.getElementById('scratchpadCanvas');
+            ctx = canvas.getContext('2d');
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                let touch = e.touches[0];
+                let mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                let touch = e.touches[0];
+                let mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                let mouseEvent = new MouseEvent('mouseup', {});
+                canvas.dispatchEvent(mouseEvent);
+            });
+        }
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            let rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            if (tool === 'pen') {
+                document.getElementById('penBtn').className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition";
+                document.getElementById('eraserBtn').className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+            } else {
+                document.getElementById('eraserBtn').className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition";
+                document.getElementById('penBtn').className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+            }
+        }
+
+        function clearCanvas() {
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            strokeCount = 0;
+            totalPathLength = 0;
+            updateAIStatus();
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            strokeCount++;
+            let rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            updateAIStatus();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            let rect = canvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+
+            let dist = Math.hypot(x - lastX, y - lastY);
+            if (currentTool === 'pen') {
+                totalPathLength += dist;
+            }
+
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = '#020617';
+                ctx.lineWidth = 25;
+            } else {
+                ctx.strokeStyle = document.getElementById('colorPicker').value;
+                ctx.lineWidth = 3;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+            updateAIStatus();
+        }
+
+        function handleImageUpload(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('uploadedImagePreview').src = event.target.result;
+                document.getElementById('uploadedImagePreviewContainer').classList.remove('hidden');
+                document.getElementById('uploadStatusText').innerText = "File uploaded: " + file.name;
+                hasUploadedImage = true;
+                updateAIStatus();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeUploadedImage() {
+            document.getElementById('uploadedImagePreviewContainer').classList.add('hidden');
+            document.getElementById('uploadedImagePreview').src = "";
+            document.getElementById('imageUploadInput').value = "";
+            document.getElementById('uploadStatusText').innerText = "No file uploaded yet.";
+            hasUploadedImage = false;
+            updateAIStatus();
+        }
+
+        function updateAIStatus() {
+            let statusText = document.getElementById('aiCheckText');
+            let badge = document.getElementById('aiMetricsBadge');
+
+            let hasWorkingContent = hasUploadedImage || (strokeCount >= 6 && totalPathLength > 400);
+
+            if (hasWorkingContent) {
+                statusText.innerText = "Working Captured (Ready for AI verification)";
+                statusText.className = "text-indigo-400 font-bold";
+                badge.innerText = strokeCount + " strokes (" + Math.round(totalPathLength) + "px)";
+                badge.className = "font-bold text-indigo-400";
+            } else if (strokeCount > 0 || hasUploadedImage) {
+                statusText.innerText = "Partial Working (May count as partial)";
+                statusText.className = "text-amber-400 font-bold";
+                badge.innerText = strokeCount + " strokes (Write more details)";
+                badge.className = "font-bold text-amber-400";
+            } else {
+                statusText.innerText = "No Working Provided (25% penalty applies if correct)";
+                statusText.className = "text-slate-400 font-bold";
+                badge.innerText = "0 strokes";
+                badge.className = "font-bold text-slate-400";
+            }
+        }
+
+        function startGame() {
+            currentLevel = 0;
+            currentStepIndex = 0;
+            playerCash = 50000;
+            generateRandomizedChallenges();
+            updateHUD();
+            setBossMood('neutral', "Let's see how well you handle corporate arithmetic!");
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            loadStep();
+        }
+
+        function updateHUD() {
+            document.getElementById('cashDisplay').innerText = '$' + playerCash.toLocaleString();
+            document.getElementById('targetDisplay').innerText = '$' + TARGET_CAPITAL.toLocaleString();
+            document.getElementById('levelDisplay').innerText = (currentLevel + 1) + ' / ' + dynamicChallenges.length;
+        }
+
+        function loadStep() {
+            currentChallenge = dynamicChallenges[currentLevel];
+            let step = currentChallenge.steps[currentStepIndex];
+            isAnswerLocked = false;
+
+            document.getElementById('challengeCategory').innerText = currentChallenge.category;
+            document.getElementById('challengeTitle').innerText = currentChallenge.title;
+            document.getElementById('stepRewardDisplay').innerText = '$' + currentChallenge.rewardPerStep.toLocaleString();
+            document.getElementById('challengeProblem').innerText = currentChallenge.problem;
+            
+            document.getElementById('stepIndicator').innerText = `Step ${currentStepIndex + 1} of ${currentChallenge.steps.length}`;
+            document.getElementById('stepPrompt').innerText = step.prompt;
+
+            clearCanvas();
+            removeUploadedImage();
+
+            let shuffledOptions = [...step.options].sort(() => Math.random() - 0.5);
+
+            let optionsHtml = '';
+            shuffledOptions.forEach((opt, idx) => {
+                optionsHtml += `
+                    <button onclick="selectOption(this, '${opt.replace(/'/g, "\\'")}')" 
+                         class="option-btn w-full bg-slate-900/90 border border-slate-700 hover:border-indigo-500 hover:bg-indigo-950/30 p-4 rounded-xl text-left text-slate-200 font-semibold text-sm shadow-md transition transform hover:-translate-y-0.5">
+                         <span class="inline-block w-6 h-6 rounded-full bg-slate-800 text-indigo-400 text-center font-bold text-xs leading-6 mr-3">${String.fromCharCode(65 + idx)}</span>
+                         ${opt}
+                    </button>
+                `;
+            });
+
+            document.getElementById('optionsContainer').innerHTML = optionsHtml;
+            document.getElementById('feedbackBox').classList.add('hidden');
+            document.getElementById('nextStepBtn').classList.add('hidden');
+        }
+
+        function selectOption(buttonEl, selectedValue) {
+            if (isAnswerLocked) return;
+            isAnswerLocked = true;
+
+            let step = currentChallenge.steps[currentStepIndex];
+            let feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.remove('hidden');
+
+            let allButtons = document.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            });
+
+            let isCorrectAnswer = (selectedValue === step.correct);
+            let hasValidWorking = hasUploadedImage || (strokeCount >= 6 && totalPathLength > 400);
+            let hasPartialWorking = (strokeCount >= 2 || hasUploadedImage);
+
+            let earnedReward = 0;
+            let aiAnalysisMessage = "";
+
+            if (isCorrectAnswer) {
+                if (hasValidWorking) {
+                    earnedReward = currentChallenge.rewardPerStep;
+                    aiAnalysisMessage = `<br><strong class='text-emerald-300'>🤖 AI Inspector: 100% Reward Granted!</strong> Correct answer selected AND valid matching working detected. Full reward ($${earnedReward.toLocaleString()}) added!`;
+                } else if (hasPartialWorking) {
+                    earnedReward = Math.round(currentChallenge.rewardPerStep * 0.25);
+                    aiAnalysisMessage = `<br><strong class='text-amber-300'>🤖 AI Inspector: 25% Partial Reward.</strong> Correct answer selected, but working is incomplete. Partial reward ($${earnedReward.toLocaleString()}) added.`;
+                } else {
+                    earnedReward = Math.round(currentChallenge.rewardPerStep * 0.25);
+                    aiAnalysisMessage = `<br><strong class='text-amber-300'>🤖 AI Inspector: 25% Reward (No Working).</strong> Correct answer without calculations. Only 25% reward ($${earnedReward.toLocaleString()}) granted!`;
+                }
+                setBossMood('happy');
+            } else {
+                if (hasValidWorking) {
+                    earnedReward = Math.round(currentChallenge.rewardPerStep * 0.25);
+                    aiAnalysisMessage = `<br><strong class='text-amber-300'>🤖 AI Inspector: 25% Partial Credit.</strong> Selected answer is incorrect, but AI detected some valid notes. Partial credit ($${earnedReward.toLocaleString()}) awarded!`;
+                } else {
+                    earnedReward = 0;
+                    aiAnalysisMessage = `<br><strong class='text-rose-300'>🤖 AI Inspector: 0% Reward.</strong> Incorrect answer selected and no matching working found.`;
+                }
+                setBossMood('angry');
+            }
+
+            playerCash += earnedReward;
+            updateHUD();
+
+            if (isCorrectAnswer) {
+                buttonEl.classList.remove('bg-slate-900/90', 'border-slate-700');
+                buttonEl.classList.add('bg-emerald-950/60', 'border-emerald-500', 'text-emerald-200');
+
+                feedbackBox.className = "p-4 rounded-xl mb-6 text-sm font-medium bg-emerald-500/20 border border-emerald-500/40 text-emerald-300";
+                feedbackBox.innerHTML = `<strong>🎉 Correct Answer!</strong><br><span class="text-xs mt-1 block">${step.explanation}</span>${aiAnalysisMessage}`;
+            } else {
+                buttonEl.classList.remove('bg-slate-900/90', 'border-slate-700');
+                buttonEl.classList.add('bg-rose-950/60', 'border-rose-500', 'text-rose-200');
+
+                allButtons.forEach(btn => {
+                    if (btn.innerText.includes(step.correct)) {
+                        btn.classList.add('border-emerald-500', 'bg-emerald-950/40');
+                    }
+                });
+
+                feedbackBox.className = "p-4 rounded-xl mb-6 text-sm font-medium bg-rose-500/20 border border-rose-500/40 text-rose-300";
+                feedbackBox.innerHTML = `<strong>❌ Incorrect option selected.</strong> The correct answer is highlighted in green.${aiAnalysisMessage}`;
+            }
+
+            document.getElementById('nextStepBtn').classList.remove('hidden');
+        }
+
+        function nextStep() {
+            currentStepIndex++;
+            if (currentStepIndex < currentChallenge.steps.length) {
+                loadStep();
+                setBossMood('neutral', "Let's focus on the next step.");
+            } else {
+                currentLevel++;
+                currentStepIndex = 0;
+                if (currentLevel < dynamicChallenges.length) {
+                    loadStep();
+                    setBossMood('neutral', "New financial module initialized. Proceed.");
+                } else {
+                    document.getElementById('quizScreen').classList.add('hidden');
+                    document.getElementById('endScreen').classList.remove('hidden');
+                    
+                    let actionContainer = document.getElementById('endActionContainer');
+
+                    if (playerCash >= TARGET_CAPITAL) {
+                        setBossMood('promotion', "Outstanding! You exceeded our corporate target! I hereby promote you to Executive Partner!");
+                        document.getElementById('endIcon').className = "inline-block p-4 bg-amber-500/20 text-amber-400 rounded-full text-4xl mb-4 border border-amber-500/30";
+                        document.getElementById('endIcon').innerText = "👑";
+                        document.getElementById('endTitle').innerText = "🎉 CORPORATE PROMOTION AWARDED! 🚀";
+                        document.getElementById('endMessage').innerHTML = `Outstanding work! You successfully navigated all AI-verified business math challenges, growing company capital to <strong class="text-emerald-400">$${playerCash.toLocaleString()}</strong> (Target: $${TARGET_CAPITAL.toLocaleString()}). Director Vance has promoted you to <strong>Executive Partner</strong>!`;
+                        
+                        actionContainer.innerHTML = `
+                            <button onclick="startGame()" class="bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-extrabold px-8 py-3.5 rounded-xl shadow-lg transition">
+                                Play Again / Re-evaluate 🔄
+                            </button>
+                        `;
+                    } else if (playerCash >= TARGET_CAPITAL * 0.8) {
+                        setBossMood('encouragement', "You are remarkably close to our corporate growth target. Keep refining your calculations!");
+                        document.getElementById('endIcon').className = "inline-block p-4 bg-indigo-500/20 text-indigo-400 rounded-full text-4xl mb-4 border border-indigo-500/30";
+                        document.getElementById('endIcon').innerText = "🤝";
+                        document.getElementById('endTitle').innerText = "Good Effort — Words of Encouragement";
+                        document.getElementById('endMessage').innerHTML = `You finished with <strong class="text-amber-400">$${playerCash.toLocaleString()}</strong>, very close to the $${TARGET_CAPITAL.toLocaleString()} target! Director Vance nods approvingly and encourages you to hone your math precision for an upcoming promotion.`;
+
+                        actionContainer.innerHTML = `
+                            <button onclick="startGame()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition">
+                                Try Again for Promotion 🔄
+                            </button>
+                        `;
+                    } else {
+                        setBossMood('furiousLow', "Your final capital is far too low! This corporation cannot tolerate such losses. Redo the challenges at once!");
+                        document.getElementById('endIcon').className = "inline-block p-4 bg-rose-500/20 text-rose-400 rounded-full text-4xl mb-4 border border-rose-500/30";
+                        document.getElementById('endIcon').innerText = "💢";
+                        document.getElementById('endTitle').innerText = "Evaluation Failed — Redo Required!";
+                        document.getElementById('endMessage').innerHTML = `Your final capital is <strong class="text-rose-400">$${playerCash.toLocaleString()}</strong>, falling short of the $${TARGET_CAPITAL.toLocaleString()} requirement. Director Vance is sternly disappointed and demands you retake the evaluation!`;
+
+                        actionContainer.innerHTML = `
+                            <button onclick="startGame()" class="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition animate-pulse">
+                                Redo Evaluation Now 🔄
+                            </button>
+                        `;
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
