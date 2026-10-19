@@ -3,825 +3,1023 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Math Tycoon with Executive Boss</title>
+    <title>Financial Mathematics Practice Exercise - Casio FX-570MS Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;500;600;700;800&family=Bangers&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .game-card { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
-        .dark-card { backdrop-filter: blur(10px); background: rgba(30, 41, 59, 0.95); }
-        canvas.scratchpad { touch-action: none; cursor: crosshair; }
-        
-        @keyframes bounceSlow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
+        body { font-family: 'Inter', sans-serif; user-select: none; }
+        .lcd-font { font-family: 'Share Tech Mono', monospace; }
+        .comic-font { font-family: 'Bangers', cursive; }
+        .calc-key {
+            transition: all 0.08s ease;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
-        .boss-anim { animation: bounceSlow 3s ease-in-out infinite; }
+        .calc-key:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .dpad-btn {
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .dpad-btn:active {
+            transform: scale(0.95);
+        }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-4px); }
-            40%, 80% { transform: translateX(4px); }
+            20%, 60% { transform: translateX(-8px) rotate(-1deg); }
+            40%, 80% { transform: translateX(8px) rotate(1deg); }
         }
-        .boss-shake { animation: shake 0.4s ease-in-out; }
-        @keyframes celebrate {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
         }
-        .boss-celebrate { animation: celebrate 0.5s ease-in-out infinite; }
+        @keyframes rageGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+        }
+        .angry-mode {
+            animation: rageGlow 1s infinite alternate;
+            border-color: #ef4444 !important;
+        }
+        /* Custom fraction typography styling */
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0 0.25rem;
+            line-height: 1.1;
+        }
+        .math-num {
+            border-bottom: 1.5px solid currentColor;
+            padding-bottom: 1px;
+        }
+        .math-den {
+            padding-top: 1px;
+        }
+        .math-sub {
+            font-size: 0.75em;
+            vertical-align: sub;
+        }
+        .math-sup {
+            font-size: 0.75em;
+            vertical-align: super;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6">
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-3 sm:p-5">
 
-    <header class="w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center bg-slate-800/80 border border-slate-700 p-4 rounded-2xl shadow-xl mb-4 backdrop-blur">
+    <!-- Header -->
+    <header class="w-full max-w-7xl flex flex-col sm:flex-row justify-between items-center bg-slate-900/90 border border-slate-700/80 p-4 rounded-2xl shadow-2xl mb-5 backdrop-blur">
         <div class="flex items-center space-x-3 mb-2 sm:mb-0">
-            <div class="bg-indigo-600 text-white p-2.5 rounded-xl font-extrabold text-xl shadow-lg">📈</div>
+            <div class="bg-indigo-600 text-white p-2.5 rounded-xl font-extrabold text-xl shadow-lg">🎬</div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-white">Business Math Tycoon</h1>
-                <p class="text-xs text-indigo-300">Corporate Finance + Executive Boardroom Director</p>
+                <h1 class="text-xl font-bold tracking-tight text-white">Financial Mathematics Studio</h1>
+                <p class="text-xs text-indigo-300">Interactive Film Set • Step-by-Step Exercise</p>
             </div>
         </div>
-        <div class="flex items-center space-x-3 sm:space-x-4">
-            <div class="bg-slate-900/90 border border-slate-700 px-3 py-2 rounded-xl text-center shadow-inner">
-                <span class="text-[10px] sm:text-xs text-slate-400 block">Company Capital</span>
-                <span id="cashDisplay" class="text-sm sm:text-lg font-extrabold text-emerald-400">$50,000</span>
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl text-center shadow-inner">
+                <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Question Progress</span>
+                <span id="questionStepDisplay" class="text-sm sm:text-lg font-extrabold text-indigo-400">1 / 10</span>
             </div>
-            <div class="bg-slate-900/90 border border-slate-700 px-3 py-2 rounded-xl text-center shadow-inner">
-                <span class="text-[10px] sm:text-xs text-slate-400 block">Tycoon Target</span>
-                <span id="targetDisplay" class="text-sm sm:text-lg font-extrabold text-amber-400">$200,000</span>
+            <div class="bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl text-center shadow-inner">
+                <span class="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">Director Temper</span>
+                <span id="rageLevelDisplay" class="text-sm sm:text-lg font-extrabold text-emerald-400">Calm 🟢</span>
             </div>
         </div>
     </header>
 
-    <main class="w-full max-w-7xl flex-grow flex flex-col lg:flex-row gap-6 items-start justify-center">
+    <!-- Main Container Grid -->
+    <main class="w-full max-w-7xl flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- Left Column: Game & Challenge Screen -->
-        <div id="gameContainer" class="w-full lg:w-7/12 dark-card border border-slate-700/80 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
+        <!-- Left Column: Interactive Exercise & Director Dialogue (7 cols) -->
+        <section id="mainSection" class="lg:col-span-7 w-full bg-slate-900/80 border border-slate-700/80 rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col relative overflow-hidden transition-all duration-300">
             
-            <!-- Welcome / Start Screen -->
-            <div id="startScreen" class="text-center py-6">
-                <div class="inline-block p-4 bg-indigo-600/20 text-indigo-400 rounded-full text-4xl mb-4 border border-indigo-500/30">👔</div>
-                <h2 class="text-2xl sm:text-3xl font-extrabold mb-3 text-white">Executive Director Edition: 10 Financial Modules</h2>
-                <p class="text-slate-300 max-w-xl mx-auto mb-6 text-sm sm:text-base leading-relaxed">
-                    Meet Director Vance, your discerning corporate executive! Solve randomized financial math challenges in sequence (Simple Interest, Compound Interest, Non-Annual, Continuous, Effective Rate, Present Value, Annuity FV, Annuity PV, Non-Annual Annuity FV & PV) and verify your working notes. Impress her to secure your Executive Partner promotion!
+            <!-- Intro Screen -->
+            <div id="startScreen" class="text-center py-8">
+                <div class="inline-block p-4 bg-indigo-600/20 text-indigo-400 rounded-full text-5xl mb-4 border border-indigo-500/30">🎬</div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold mb-3 text-white">Welcome to the Film Set!</h2>
+                <p class="text-slate-300 max-w-lg mx-auto mb-6 text-sm leading-relaxed">
+                    You are the chief financial consultant on a blockbuster film set. Every attempt generates dynamic values and film scenarios. The Director demands high accuracy!
                 </p>
-                <!-- Objective & Reward Tier Banner -->
-                <div class="bg-indigo-950/60 border border-indigo-500/30 rounded-2xl p-4 mb-6 text-indigo-200 text-xs sm:text-sm text-left flex items-start space-x-3">
-                    <span class="text-xl">🏆</span>
-                    <div>
-                        <strong class="block font-bold text-indigo-100 mb-1">Corporate Evaluation Rules:</strong>
-                        <ul class="list-disc pl-4 space-y-1 text-slate-300">
-                            <li><strong>100% Reward:</strong> Correct Answer + Valid Working Notes.</li>
-                            <li><strong>25% Reward:</strong> Correct Answer without Working / Partial working.</li>
-                            <li><strong>0% Reward:</strong> Wrong answer or invalid working.</li>
-                            <li><strong>Final Promotion:</strong> Reach target ($200,000) across all 10 financial modules!</li>
-                        </ul>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto text-left text-xs mb-8">
+                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex items-center space-x-2">
+                        <span class="text-indigo-400 font-bold text-base">1️⃣</span>
+                        <span>Select the correct mathematical formula for the scenario.</span>
+                    </div>
+                    <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex items-center space-x-2">
+                        <span class="text-indigo-400 font-bold text-base">2️⃣</span>
+                        <span>Calculate the exact figure using the Casio calculator.</span>
                     </div>
                 </div>
-                <button onclick="startGame()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition transform hover:-translate-y-0.5 cursor-pointer">
-                    Enter Boardroom & Start 🚀
+                <button onclick="startExercise()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-indigo-500/30 transition transform hover:-translate-y-0.5 cursor-pointer text-base">
+                    Action! Start Scene 🚀
                 </button>
             </div>
 
-            <!-- Step-by-Step Challenge Screen -->
-            <div id="quizScreen" class="hidden">
-                <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-                    <div>
-                        <span id="challengeCategory" class="text-xs font-semibold px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30 uppercase tracking-wider">Category</span>
-                        <h3 id="challengeTitle" class="text-xl font-bold text-white mt-2">Challenge Title</h3>
+            <!-- Quiz Stage Container -->
+            <div id="quizScreen" class="hidden space-y-6">
+                
+                <!-- Director's Avatar & Feedback Banner -->
+                <div id="directorCard" class="bg-slate-950 border-2 border-indigo-500/50 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 transition-all duration-300">
+                    <div class="relative shrink-0">
+                        <div id="directorAvatar" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-indigo-950 border-2 border-indigo-400 flex items-center justify-center text-3xl sm:text-4xl shadow-inner transition-transform duration-300">
+                            🧐
+                        </div>
+                        <span id="directorBadge" class="absolute -bottom-2 -right-1 bg-indigo-600 text-[9px] font-black uppercase text-white px-2 py-0.5 rounded-full border border-slate-900">
+                            Director
+                        </span>
                     </div>
-                    <div class="text-right">
-                        <span class="text-xs text-slate-400 block">Module Reward</span>
-                        <span id="stepRewardDisplay" class="text-emerald-400 font-bold">$10,000</span>
+                    <div class="flex-grow text-center sm:text-left space-y-1">
+                        <div class="flex items-center justify-center sm:justify-between">
+                            <span id="directorName" class="comic-font text-lg text-indigo-300 tracking-wide">DIRECTOR SPIELBERG</span>
+                            <span id="phaseBadge" class="text-[10px] font-bold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30 uppercase">Step 1: Formula Selection</span>
+                        </div>
+                        <p id="directorSpeech" class="text-xs sm:text-sm text-slate-200 font-medium italic leading-relaxed">
+                            "Alright people, camera's rolling! First, tell me what formula we need here so we don't blow our budget!"
+                        </p>
                     </div>
-                </div>
-
-                <!-- Problem Context Box -->
-                <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-2xl mb-6 shadow-inner">
-                    <p id="challengeProblem" class="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
-                        Problem context description...
-                    </p>
                 </div>
 
                 <!-- Active Question Box -->
-                <div class="bg-slate-800/90 border border-indigo-500/40 p-6 rounded-2xl mb-6 shadow-xl relative">
-                    <h4 id="stepPrompt" class="text-base sm:text-lg font-bold text-white mb-4">
-                        Question prompt goes here...
-                    </h4>
-                </div>
-
-                <!-- Multiple Choice Options Container -->
-                <div class="mb-6">
-                    <span class="text-xs font-semibold text-slate-400 block mb-3 uppercase tracking-wider">Select Your Answer:</span>
-                    <div id="optionsContainer" class="flex flex-col gap-3">
-                        <!-- Dynamically populated multiple choice option buttons -->
+                <div class="bg-slate-950/80 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-inner">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span id="questionTopic" class="text-xs font-extrabold text-indigo-400 uppercase tracking-wider">Simple Interest</span>
+                        <span id="questionNumber" class="text-xs text-slate-500 font-semibold">Question 1 of 10</span>
                     </div>
-                </div>
-
-                <!-- Feedback Box -->
-                <div id="feedbackBox" class="hidden p-4 rounded-xl mb-6 text-sm font-medium"></div>
-
-                <!-- Action Button -->
-                <div class="flex justify-end">
-                    <button id="nextStepBtn" onclick="nextStep()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition cursor-pointer">
-                        Next Module ➡️
-                    </button>
-                </div>
-            </div>
-
-            <!-- Game Over / Victory / Evaluation Screen -->
-            <div id="endScreen" class="hidden text-center py-8">
-                <div id="endIcon" class="inline-block p-4 bg-emerald-500/20 text-emerald-400 rounded-full text-4xl mb-4 border border-emerald-500/30">🏆</div>
-                <h2 id="endTitle" class="text-3xl font-extrabold mb-3 text-white">Boardroom Evaluation Result</h2>
-                <p id="endMessage" class="text-slate-300 max-w-lg mx-auto mb-8 text-sm sm:text-base leading-relaxed">
-                    Evaluation summary goes here...
-                </p>
-                <div id="endActionContainer" class="flex justify-center space-x-4">
-                    <!-- Dynamic action buttons -->
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Right Column: Boss Person Widget + Notepad -->
-        <div class="w-full lg:w-5/12 flex flex-col gap-6">
-            
-            <!-- Executive Boss Widget -->
-            <div id="bossWidget" class="bg-slate-900/90 border border-slate-700 rounded-3xl p-5 shadow-2xl flex items-center space-x-4 transition-all duration-300">
-                <div id="bossAvatarContainer" class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-slate-950 border-2 border-indigo-500/50 flex items-center justify-center shadow-xl boss-anim overflow-hidden flex-shrink-0">
-                    <img id="bossPortraitImg" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80" class="w-full h-full object-cover filter contrast-105 brightness-95 transition-transform duration-300" alt="Director Vance">
-                    <div id="bossMoodBadge" class="absolute bottom-1 right-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow">
-                        Observing
-                    </div>
-                </div>
-                <div class="flex-grow bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-inner relative">
-                    <div class="absolute -left-2.5 top-6 w-0 h-0 border-t-[8px] border-t-transparent border-r-[10px] border-r-slate-800 border-b-[8px] border-b-transparent"></div>
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-bold text-indigo-300 tracking-wide uppercase">Director Vance (Boss)</span>
-                        <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">Executive Director</span>
-                    </div>
-                    <p id="bossDialogue" class="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">
-                        "Show me your financial calculations. I expect professional accuracy in our firm!"
+                    <p id="questionText" class="text-slate-100 text-sm sm:text-base font-semibold leading-relaxed">
+                        Loading question...
                     </p>
                 </div>
+
+                <!-- STEP 1: Formula Options UI -->
+                <div id="formulaSection" class="space-y-3">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1">
+                        <span>1️⃣ Select the Correct Formula:</span>
+                    </p>
+                    <div id="formulaOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- STEP 2: Calculation Input UI (Hidden until Formula is correct) -->
+                <div id="calculationSection" class="hidden space-y-4 bg-indigo-950/30 border border-indigo-500/30 p-4 rounded-2xl">
+                    <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1">
+                        <span>2️⃣ Formula Confirmed! Now Calculate the Exact Answer:</span>
+                    </p>
+                    <div id="formulaDisplay" class="hidden text-xs sm:text-sm bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-indigo-300">
+                        <!-- Shows confirmed formula only when wrong answer is submitted -->
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                        <div class="relative w-full sm:w-auto flex-grow flex items-center">
+                            <span id="unitPrefix" class="absolute left-3 text-sm font-bold text-slate-400">$</span>
+                            <input type="text" id="userCalcInput" placeholder="Enter calculated value..." class="bg-slate-950 border border-slate-700 rounded-xl pl-7 pr-3 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:border-indigo-500 w-full font-mono">
+                            <span id="unitSuffix" class="absolute right-3 text-sm font-bold text-slate-400 hidden">%</span>
+                        </div>
+                        <button onclick="pasteCalcResult()" class="w-full sm:w-auto bg-indigo-900/80 hover:bg-indigo-800 text-indigo-200 border border-indigo-600/60 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center justify-center space-x-1">
+                            <span>📋 Use Calc LCD</span>
+                        </button>
+                        <button onclick="verifyCalculation()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-lg transition cursor-pointer flex items-center justify-center space-x-1">
+                            <span>Submit Answer ✅</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Next Question Navigation -->
+                <div id="nextQuestionSection" class="hidden flex justify-end border-t border-slate-800 pt-3">
+                    <button onclick="nextQuestion()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-7 py-3 rounded-xl shadow-lg transition cursor-pointer flex items-center space-x-2">
+                        <span>Next Question / Scene 🎬</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
             </div>
 
-            <!-- Working Notepad Widget -->
-            <div class="bg-slate-900/90 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col">
-                <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xl">🤖</span>
-                        <h3 class="font-bold text-white text-base">Working Notepad & AI Inspector</h3>
+            <!-- Result Summary Screen -->
+            <div id="resultScreen" class="hidden text-center py-6 space-y-5">
+                <div id="resultAvatar" class="w-24 h-24 mx-auto rounded-3xl bg-slate-950 border-4 border-emerald-500 flex items-center justify-center text-6xl shadow-2xl transition-transform">
+                    🎬
+                </div>
+                <div>
+                    <h2 id="resultTitle" class="text-2xl sm:text-3xl font-extrabold text-white">Movie Wrap!</h2>
+                    <p id="resultSubtitle" class="text-indigo-400 text-xs font-bold uppercase tracking-wider mt-1">Production Evaluation</p>
+                </div>
+
+                <!-- Mistakes Breakdown Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-center">
+                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 block uppercase font-bold">Total Wrong Attempts</span>
+                        <span id="totalMistakesDisplay" class="text-xl font-extrabold text-rose-400">0</span>
                     </div>
-                    <span class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-medium">Auto-clears per question</span>
-                </div>
-
-                <div class="bg-indigo-950/80 border border-indigo-500/40 rounded-xl p-3 mb-4 text-indigo-200 text-xs leading-relaxed flex items-start space-x-2">
-                    <span class="text-base">💡</span>
-                    <p><strong>Working Policy:</strong> Correct answer without working earns only <strong>25% reward</strong>. Full 100% reward requires either annotated canvas drawing or an uploaded photo of your written working!</p>
-                </div>
-
-                <div class="flex items-center justify-between mb-3 bg-slate-800/80 p-2 rounded-xl border border-slate-700">
-                    <div class="flex items-center space-x-2">
-                        <button onclick="setTool('pen')" id="penBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition cursor-pointer">🖊️ Pen</button>
-                        <button onclick="setTool('eraser')" id="eraserBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition cursor-pointer">🧹 Eraser</button>
-                        <input type="color" id="colorPicker" value="#6366f1" class="w-7 h-7 rounded border-0 cursor-pointer bg-transparent">
+                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                        <span class="text-[10px] text-slate-400 block uppercase font-bold">Formula Errors</span>
+                        <span id="formulaMistakesDisplay" class="text-xl font-extrabold text-amber-400">0</span>
                     </div>
-                    <button onclick="clearCanvas()" class="text-xs bg-slate-700 hover:bg-rose-600 hover:text-white text-slate-300 px-3 py-1.5 rounded-lg transition font-medium cursor-pointer">Clear Canvas</button>
-                </div>
-
-                <div class="relative w-full h-[320px] bg-slate-950 border border-slate-700 rounded-2xl overflow-hidden shadow-inner mb-4 flex items-center justify-center">
-                    <canvas id="scratchpadCanvas" class="scratchpad w-full h-full"></canvas>
-                    <div id="uploadedImagePreviewContainer" class="absolute inset-0 hidden bg-slate-950/95 flex flex-col items-center justify-center p-3 z-10">
-                        <div class="relative w-full h-full flex items-center justify-center">
-                            <img id="uploadedImagePreview" class="max-h-full max-w-full object-contain rounded-xl border border-indigo-500/50 shadow-lg" alt="Uploaded Working">
-                        </div>
-                        <div class="absolute top-3 right-3 flex items-center space-x-2">
-                            <button onclick="triggerFileReplace()" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-3 py-1.5 text-xs font-bold shadow-lg transition cursor-pointer flex items-center space-x-1">
-                                <span>🔄 Replace</span>
-                            </button>
-                            <button onclick="removeUploadedImage()" class="bg-rose-600 hover:bg-rose-500 text-white rounded-xl px-3 py-1.5 text-xs font-bold shadow-lg transition cursor-pointer">
-                                ❌ Remove
-                            </button>
-                        </div>
+                    <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800 col-span-2 sm:col-span-1">
+                        <span class="text-[10px] text-slate-400 block uppercase font-bold">Calc Errors</span>
+                        <span id="calcMistakesDisplay" class="text-xl font-extrabold text-indigo-400">0</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-                    <span class="text-xs text-slate-300 font-semibold mb-2">Can't annotate? Upload a photo of your written working:</span>
-                    <div class="flex flex-wrap gap-2 justify-center items-center w-full">
-                        <label class="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2">
-                            <span>📁 Choose Working Photo</span>
-                            <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                        </label>
-                        <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2">
-                            <span>📷 Take Photo / Camera</span>
-                            <input type="file" id="cameraCaptureInput" accept="image/*" capture="environment" class="hidden" onchange="handleImageUpload(event)">
-                        </label>
+                <!-- Director Detailed Feedback Card -->
+                <div id="feedbackCard" class="bg-slate-950 p-5 rounded-2xl border-2 border-emerald-500/80 max-w-lg mx-auto text-left space-y-2 relative">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="comic-font text-base text-indigo-300">DIRECTOR'S PERFORMANCE EVALUATION</span>
+                        <span id="finalDirectorMood" class="text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Delighted 🌟</span>
                     </div>
-                    <span id="uploadStatusText" class="text-[11px] text-slate-400 mt-2">No photo attached yet. Draw on canvas or upload photo to earn 100% reward.</span>
+                    <p id="resultMessage" class="text-slate-200 text-xs sm:text-sm font-medium leading-relaxed italic">
+                        "Outstanding performance! Your calculations kept us strictly on budget!"
+                    </p>
                 </div>
 
-                <div id="aiWorkingStatusBox" class="mt-4 p-3 rounded-xl bg-slate-800/90 border border-slate-700 text-xs text-slate-300 flex items-center justify-between">
-                    <span>AI Inspector: <strong id="aiCheckText" class="text-amber-400">Waiting for answer & working...</strong></span>
-                    <span id="aiMetricsBadge" class="font-bold text-slate-400">0 strokes</span>
-                </div>
+                <button onclick="startExercise()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition cursor-pointer text-sm">
+                    Re-take Scene (New Dynamic Exercise) 🔄
+                </button>
             </div>
 
-        </div>
+        </section>
+
+        <!-- Right Column: Casio FX-570MS Calculator (5 cols) -->
+        <section class="lg:col-span-5 w-full flex justify-center lg:sticky lg:top-4">
+            
+            <div class="w-full max-w-sm sm:max-w-md bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 p-5 rounded-3xl border-2 border-slate-700 shadow-2xl relative flex flex-col items-center">
+                
+                <!-- Top Branding Header -->
+                <div class="w-full flex justify-between items-start mb-3 px-1">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl font-black tracking-widest text-white italic">CASIO</span>
+                            <span class="text-xs font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">fx-570MS</span>
+                        </div>
+                        <div class="text-[9px] font-semibold tracking-wider text-slate-400 mt-0.5">S-V.P.A.M.</div>
+                    </div>
+                    <div class="text-right">
+                        <!-- Solar Panel Simulation -->
+                        <div class="w-20 h-5 bg-amber-950/70 border border-amber-900/80 rounded flex items-center justify-center space-x-1 p-1 shadow-inner">
+                            <div class="w-1/4 h-full bg-amber-900/60 rounded-xs"></div>
+                            <div class="w-1/4 h-full bg-amber-900/60 rounded-xs"></div>
+                            <div class="w-1/4 h-full bg-amber-900/60 rounded-xs"></div>
+                            <div class="w-1/4 h-full bg-amber-900/60 rounded-xs"></div>
+                        </div>
+                        <span class="text-[8px] text-slate-500 tracking-tighter block mt-0.5 uppercase">TWO WAY POWER</span>
+                    </div>
+                </div>
+
+                <!-- LCD Display -->
+                <div class="w-full bg-emerald-950/90 border-4 border-slate-800 rounded-xl p-3 mb-3 shadow-inner relative overflow-hidden">
+                    <!-- Screen Status Indicators -->
+                    <div class="flex justify-between items-center text-[10px] lcd-font text-emerald-400/90 h-4 border-b border-emerald-900/40 pb-1 mb-1">
+                        <div class="flex space-x-2">
+                            <span id="indicatorShift" class="hidden font-bold bg-emerald-400 text-emerald-950 px-1 rounded-xs">S</span>
+                            <span id="indicatorAlpha" class="hidden font-bold bg-amber-400 text-slate-950 px-1 rounded-xs">A</span>
+                            <span id="indicatorM" class="hidden font-bold">M</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <span id="indicatorAngle" class="font-bold">DEG</span>
+                            <span id="indicatorFix" class="hidden">FIX</span>
+                            <span id="indicatorSci" class="hidden">SCI</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Calculation Screen Lines -->
+                    <div class="flex flex-col justify-between h-14">
+                        <div id="lcdFormula" class="lcd-font text-emerald-300/80 text-xs tracking-wider truncate text-right min-h-[18px]"></div>
+                        <div id="lcdDisplay" class="lcd-font text-emerald-300 text-xl sm:text-2xl font-bold tracking-widest truncate text-right">0</div>
+                    </div>
+                </div>
+
+                <!-- D-Pad and Top Function Row -->
+                <div class="w-full grid grid-cols-3 gap-2 mb-3 items-center">
+                    <!-- Shift & Alpha Row -->
+                    <div class="flex flex-col space-y-1.5">
+                        <button onclick="pressShift()" id="btnShift" class="calc-key bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] py-1.5 rounded-md uppercase">
+                            <span class="block -mb-0.5 text-[8px] text-amber-950">SHIFT</span>
+                        </button>
+                        <button onclick="pressAlpha()" id="btnAlpha" class="calc-key bg-rose-900/90 hover:bg-rose-800 text-rose-200 font-bold text-[10px] py-1.5 rounded-md uppercase">
+                            <span class="block -mb-0.5 text-[8px] text-rose-300">ALPHA</span>
+                        </button>
+                    </div>
+
+                    <!-- Circular D-Pad / REPLAY Button -->
+                    <div class="flex justify-center">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-slate-800 rounded-full border-2 border-slate-700 flex flex-col justify-between items-center p-1 relative shadow-lg">
+                            <button onclick="pressDirection('UP')" class="dpad-btn text-[9px] text-slate-300 font-bold hover:text-white px-2">▲</button>
+                            <div class="w-full flex justify-between items-center px-1">
+                                <button onclick="pressDirection('LEFT')" class="dpad-btn text-[9px] text-slate-300 font-bold hover:text-white">◀</button>
+                                <span class="text-[7px] font-bold text-slate-500 tracking-tighter">REPLAY</span>
+                                <button onclick="pressDirection('RIGHT')" class="dpad-btn text-[9px] text-slate-300 font-bold hover:text-white">▶</button>
+                            </div>
+                            <button onclick="pressDirection('DOWN')" class="dpad-btn text-[9px] text-slate-300 font-bold hover:text-white px-2">▼</button>
+                        </div>
+                    </div>
+
+                    <!-- Mode & On Row -->
+                    <div class="flex flex-col space-y-1.5">
+                        <button onclick="pressMode()" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] py-1.5 rounded-md">
+                            MODE/CLR
+                        </button>
+                        <button onclick="pressON()" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] py-1.5 rounded-md">
+                            ON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Casio Scientific Function Keys -->
+                <div class="w-full space-y-1.5 mb-3">
+                    <!-- Row 1 -->
+                    <div class="grid grid-cols-6 gap-1 text-[10px] font-semibold">
+                        <button onclick="insertFunc('x^-1')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">x<sup>-1</sup></button>
+                        <button onclick="insertFunc('nCr')" class="calc-key bg-slate-800 hover:bg-slate-700 text-indigo-300 py-1.5 rounded">nCr</button>
+                        <button onclick="insertFunc('Pol(')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">Pol</button>
+                        <button onclick="insertFunc('x^3')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">x<sup>3</sup></button>
+                        <button onclick="insertFunc('d/c')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">a<sup>b</sup>/c</button>
+                        <button onclick="insertFunc('sqrt')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">√</button>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="grid grid-cols-6 gap-1 text-[10px] font-semibold">
+                        <button onclick="insertFunc('sqr')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">x<sup>2</sup></button>
+                        <button onclick="insertFunc('pow')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">x<sup>y</sup></button>
+                        <button onclick="insertFunc('log')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">log</button>
+                        <button onclick="insertFunc('ln')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">ln</button>
+                        <button onclick="insertChar('-')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">(-)</button>
+                        <button onclick="insertFunc('hyp')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">hyp</button>
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div class="grid grid-cols-6 gap-1 text-[10px] font-semibold">
+                        <button onclick="insertFunc('sin')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">sin</button>
+                        <button onclick="insertFunc('cos')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">cos</button>
+                        <button onclick="insertFunc('tan')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">tan</button>
+                        <button onclick="insertFunc('RCL')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">RCL</button>
+                        <button onclick="insertFunc('ENG')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">ENG</button>
+                        <button onclick="insertChar('(')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">(</button>
+                    </div>
+
+                    <!-- Row 4 -->
+                    <div class="grid grid-cols-6 gap-1 text-[10px] font-semibold">
+                        <button onclick="insertChar(')')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">)</button>
+                        <button onclick="insertChar(',')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">,</button>
+                        <button onclick="insertFunc('M+')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">M+</button>
+                        <button onclick="insertFunc('STO')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">STO</button>
+                        <button onclick="insertFunc('CALC')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">CALC</button>
+                        <button onclick="insertFunc('SOLVE')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded">SOLVE</button>
+                    </div>
+                </div>
+
+                <!-- Main Numeric Keypad Grid -->
+                <div class="w-full grid grid-cols-5 gap-1.5 text-xs sm:text-sm font-bold">
+                    <!-- Row 1 -->
+                    <button onclick="insertChar('7')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">7</button>
+                    <button onclick="insertChar('8')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">8</button>
+                    <button onclick="insertChar('9')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">9</button>
+                    <button onclick="pressDEL()" class="calc-key bg-amber-700 hover:bg-amber-600 text-amber-100 py-2.5 rounded-lg font-extrabold text-xs">DEL</button>
+                    <button onclick="pressAC()" class="calc-key bg-rose-800 hover:bg-rose-700 text-rose-100 py-2.5 rounded-lg font-extrabold text-xs">AC</button>
+
+                    <!-- Row 2 -->
+                    <button onclick="insertChar('4')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">4</button>
+                    <button onclick="insertChar('5')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">5</button>
+                    <button onclick="insertChar('6')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">6</button>
+                    <button onclick="insertChar('*')" class="calc-key bg-slate-800 hover:bg-slate-700 text-indigo-300 py-2.5 rounded-lg text-base">×</button>
+                    <button onclick="insertChar('/')" class="calc-key bg-slate-800 hover:bg-slate-700 text-indigo-300 py-2.5 rounded-lg text-base">÷</button>
+
+                    <!-- Row 3 -->
+                    <button onclick="insertChar('1')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">1</button>
+                    <button onclick="insertChar('2')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">2</button>
+                    <button onclick="insertChar('3')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">3</button>
+                    <button onclick="insertChar('+')" class="calc-key bg-slate-800 hover:bg-slate-700 text-indigo-300 py-2.5 rounded-lg text-base">+</button>
+                    <button onclick="insertChar('-')" class="calc-key bg-slate-800 hover:bg-slate-700 text-indigo-300 py-2.5 rounded-lg text-base">-</button>
+
+                    <!-- Row 4 -->
+                    <button onclick="insertChar('0')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">0</button>
+                    <button onclick="insertChar('.')" class="calc-key bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg">.</button>
+                    <button onclick="insertFunc('EXP')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-lg text-[10px]">EXP</button>
+                    <button onclick="insertFunc('Ans')" class="calc-key bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-lg text-[10px]">Ans</button>
+                    <button onclick="calculateResult()" class="calc-key bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-lg font-black text-base shadow-lg">=</button>
+                </div>
+
+            </div>
+
+        </section>
 
     </main>
 
     <script>
-        let currentModuleIndex = 0;
-        let playerCash = 50000;
-        const TARGET_CAPITAL = 200000;
-        let modulesData = [];
-        let isAnswerLocked = false;
+        // Dynamic Question Generators
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
-        let canvas, ctx;
-        let isDrawing = false;
-        let currentTool = 'pen';
-        let strokeCount = 0;
-        let totalPathLength = 0;
-        let lastX = 0, lastY = 0;
-        let hasUploadedImage = false;
+        function getRandomFloat(min, max, decimals = 2) {
+            const val = Math.random() * (max - min) + min;
+            return parseFloat(val.toFixed(decimals));
+        }
 
-        const bossDialogues = {
-            neutral: [
-                "Show me your financial calculations. I expect professional rigor in our firm!",
-                "Review the business metrics thoroughly before you commit corporate capital.",
-                "Precision is paramount in executive finance. Proceed carefully."
-            ],
-            happy: [
-                "Splendid calculation! Our corporate profits are robust!",
-                "Magnificent! That is how an exceptional financial analyst operates!",
-                "Impressive work! You are securing our future market dominance!"
-            ],
-            angry: [
-                "Unacceptable! Are these financial projections a joke to you?!",
-                "Subpar performance! Check your calculations immediately or face strict review!",
-                "What kind of careless arithmetic is this?! Fix your figures right now!"
-            ],
-            encouragement: [
-                "You are remarkably close to our corporate growth target. Push through the final hurdle!",
-                "Solid overall effort. Refine your financial precision slightly and you'll reach the apex!"
-            ],
-            furiousLow: [
-                "Your final capital is far below acceptable standards! This firm cannot tolerate such losses. Redo this evaluation at once!",
-                "Unsatisfactory boardroom performance! Report back after reviewing your formulas!"
-            ],
-            promotion: [
-                "Outstanding! You exceeded our corporate target! I hereby promote you to Executive Partner!",
-                "Brilliant milestone achieved! You are promoted to Senior Vice President of Corporate Finance!"
-            ]
+        function getRandomChoice(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        const standardFormulas = {
+            simpleInterest: { html: "<i>I</i> = <i>P</i> · <i>r</i> · <i>t</i>", text: "I = P · r · t" },
+            simpleTotal: { html: "<i>A</i> = <i>P</i>(1 + <i>r</i>·<i>t</i>)", text: "A = P(1 + r·t)" },
+            compoundAmt: { html: "<i>A</i> = <i>P</i>(1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i>·<i>t</i></sup>", text: "A = P(1 + r/m)^(m·t)" },
+            compoundPV: { html: "<i>P</i> = <i>A</i>(1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup>-<i>m</i>·<i>t</i></sup>", text: "P = A(1 + r/m)^(-m·t)" },
+            effectiveRate: { html: "<i>r</i><span class='math-sub'>eff</span> = (1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i></sup> - 1", text: "r_eff = (1 + r/m)^m - 1" },
+            annuityFV: { html: "<i>S</i> = <i>R</i> · [<div class='math-frac'><span class='math-num'>(1 + <i>i</i>)<sup><i>n</i></sup> - 1</span><span class='math-den'><i>i</i></span></div>]", text: "S = R · [((1 + i)^n - 1) / i]" },
+            annuityPV: { html: "<i>P</i> = <i>R</i> · [<div class='math-frac'><span class='math-num'>1 - (1 + <i>i</i>)<sup>-<i>n</i></sup></span><span class='math-den'><i>i</i></span></div>]", text: "P = R · [(1 - (1 + i)^-n) / i]" },
+            continuousComp: { html: "<i>A</i> = <i>P</i> · <i>e</i><sup><i>r</i>·<i>t</i></sup>", text: "A = P · e^(r·t)" }
         };
 
-        function setBossMood(mood, customMsg = null) {
-            let badgeEl = document.getElementById('bossMoodBadge');
-            let containerEl = document.getElementById('bossAvatarContainer');
-            let dialogueEl = document.getElementById('bossDialogue');
-            let widgetEl = document.getElementById('bossWidget');
-            let portraitImg = document.getElementById('bossPortraitImg');
+        function generateDynamicQuestions() {
+            const list = [];
 
-            if (!badgeEl || !containerEl || !dialogueEl || !widgetEl || !portraitImg) return;
+            // Q1: Simple Interest
+            const p1 = getRandomInt(15, 60) * 100;
+            const r1 = getRandomInt(3, 9);
+            const t1 = getRandomInt(2, 5);
+            const ans1 = p1 * (r1 / 100) * t1;
+            const intro1 = getRandomChoice([
+                `The production team needs a loan of $${p1.toLocaleString()} for prop equipment. Find the simple interest incurred over ${t1} years at an interest rate of ${r1}% per year.`,
+                `Find the simple interest earned on a $${p1.toLocaleString()} studio deposit held for ${t1} years at a simple interest rate of ${r1}% per year.`
+            ]);
+            list.push({
+                topic: "Simple Interest",
+                question: intro1,
+                unit: "$",
+                numericAnswer: parseFloat(ans1.toFixed(2)),
+                correctFormula: standardFormulas.simpleInterest,
+                distractors: [standardFormulas.compoundAmt, standardFormulas.effectiveRate, standardFormulas.annuityFV],
+                correctFormulaText: `<i>I</i> = <i>P</i> · <i>r</i> · <i>t</i> &nbsp;&nbsp;➔&nbsp;&nbsp; <i>I</i> = ${p1} × ${(r1/100)} × ${t1}`,
+                keywords: ["simple interest"],
+                wrongFormulaHint: "Look at the key term: 'simple interest'. You only need the linear interest formula I = P · r · t!",
+                wrongCalcHint: `Multiply Principal ($${p1}) by Rate (${r1/100}) by Time (${t1} yrs).`
+            });
 
-            containerEl.classList.remove('boss-shake', 'boss-celebrate', 'boss-anim');
-            widgetEl.className = "bg-slate-900/90 border border-slate-700 rounded-3xl p-5 shadow-2xl flex items-center space-x-4 transition-all duration-300";
+            // Q2: Compound Interest (Annual/Semi)
+            const p2 = getRandomInt(40, 120) * 100;
+            const r2 = getRandomInt(4, 10);
+            const t2 = getRandomInt(3, 8);
+            const freqObj2 = getRandomChoice([
+                { name: "annually", m: 1 },
+                { name: "semiannually", m: 2 }
+            ]);
+            const ans2 = p2 * Math.pow(1 + (r2 / 100) / freqObj2.m, freqObj2.m * t2);
+            list.push({
+                topic: "Compound Interest (Future Value)",
+                question: `Calculate the total accumulated amount after ${t2} years if $${p2.toLocaleString()} is invested into the movie fund at ${r2}% per year compounded ${freqObj2.name}.`,
+                unit: "$",
+                numericAnswer: parseFloat(ans2.toFixed(2)),
+                correctFormula: standardFormulas.compoundAmt,
+                distractors: [standardFormulas.simpleInterest, standardFormulas.continuousComp, standardFormulas.annuityPV],
+                correctFormulaText: `<i>A</i> = <i>P</i>(1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i>·<i>t</i></sup> &nbsp;&nbsp;➔&nbsp;&nbsp; <i>A</i> = ${p2} × (1 + <div class='math-frac'><span class='math-num'>${r2/100}</span><span class='math-den'>${freqObj2.m}</span></div>)<sup>(${freqObj2.m}×${t2})</sup>`,
+                keywords: [`compounded ${freqObj2.name}`],
+                wrongFormulaHint: `Notice the term 'compounded ${freqObj2.name}'! Use compound amount formula with m = ${freqObj2.m}.`,
+                wrongCalcHint: `Compute ${p2} × (1 + ${r2/100}/${freqObj2.m})^${freqObj2.m * t2}.`
+            });
 
-            let msg = customMsg;
+            // Q3: Effective Rate
+            const r3 = getRandomInt(6, 12);
+            const freqObj3 = getRandomChoice([
+                { name: "quarterly", m: 4 },
+                { name: "monthly", m: 12 }
+            ]);
+            const ans3 = (Math.pow(1 + (r3 / 100) / freqObj3.m, freqObj3.m) - 1) * 100;
+            list.push({
+                topic: "Effective Rate of Interest",
+                question: `Find the effective rate of interest corresponding to a nominal rate of ${r3}% per year compounded ${freqObj3.name} (enter percentage value rounded to 2 decimal places):`,
+                unit: "%",
+                numericAnswer: parseFloat(ans3.toFixed(2)),
+                correctFormula: standardFormulas.effectiveRate,
+                distractors: [standardFormulas.compoundAmt, standardFormulas.simpleInterest, standardFormulas.annuityFV],
+                correctFormulaText: `<i>r</i><span class='math-sub'>eff</span> = (1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i></sup> - 1 &nbsp;&nbsp;➔&nbsp;&nbsp; <i>r</i><span class='math-sub'>eff</span> = (1 + <div class='math-frac'><span class='math-num'>${r3/100}</span><span class='math-den'>${freqObj3.m}</span></div>)<sup>${freqObj3.m}</sup> - 1`,
+                keywords: ["effective rate"],
+                wrongFormulaHint: "The question demands the 'effective rate of interest'. Look for r_eff = (1 + r/m)ᵐ - 1!",
+                wrongCalcHint: `Calculate (1 + ${r3/100}/${freqObj3.m})^${freqObj3.m} - 1, then multiply by 100 for %.`
+            });
 
-            if (mood === 'neutral') {
-                badgeEl.innerText = "Observing";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-anim');
-                portraitImg.style.filter = "contrast(1.05) brightness(95%)";
-                if (!msg) msg = bossDialogues.neutral[Math.floor(Math.random() * bossDialogues.neutral.length)];
-            } else if (mood === 'happy') {
-                badgeEl.innerText = "Delighted";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-emerald-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-celebrate');
-                widgetEl.classList.add('border-emerald-500/80', 'bg-emerald-950/20');
-                portraitImg.style.filter = "contrast(1.1) brightness(105%) hue-rotate(10deg)";
-                if (!msg) msg = bossDialogues.happy[Math.floor(Math.random() * bossDialogues.happy.length)];
-            } else if (mood === 'angry') {
-                badgeEl.innerText = "Furious";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-rose-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-shake');
-                widgetEl.classList.add('border-rose-500/80', 'bg-rose-950/20');
-                portraitImg.style.filter = "contrast(1.15) brightness(90%) hue-rotate(-20deg)";
-                if (!msg) msg = bossDialogues.angry[Math.floor(Math.random() * bossDialogues.angry.length)];
-            } else if (mood === 'encouragement') {
-                badgeEl.innerText = "Encouraging";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-amber-600 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-anim');
-                widgetEl.classList.add('border-amber-500/80', 'bg-amber-950/20');
-                portraitImg.style.filter = "contrast(1.05) brightness(100%)";
-                if (!msg) msg = bossDialogues.encouragement[Math.floor(Math.random() * bossDialogues.encouragement.length)];
-            } else if (mood === 'furiousLow') {
-                badgeEl.innerText = "Outraged";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-rose-700 text-white text-[9px] font-bold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-shake');
-                widgetEl.classList.add('border-rose-600', 'bg-rose-950/30');
-                portraitImg.style.filter = "contrast(1.2) brightness(85%) hue-rotate(-30deg)";
-                if (!msg) msg = bossDialogues.furiousLow[Math.floor(Math.random() * bossDialogues.furiousLow.length)];
-            } else if (mood === 'promotion') {
-                badgeEl.innerText = "Promoted!";
-                badgeEl.className = "absolute bottom-1 right-1 px-1.5 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-extrabold rounded uppercase tracking-wider shadow";
-                containerEl.classList.add('boss-celebrate');
-                widgetEl.classList.add('border-amber-400', 'bg-amber-950/30');
-                portraitImg.style.filter = "contrast(1.15) brightness(110%) saturate(120%)";
-                if (!msg) msg = bossDialogues.promotion[Math.floor(Math.random() * bossDialogues.promotion.length)];
-            }
+            // Q4: Present Value Compound
+            const a4 = getRandomInt(20, 80) * 1000;
+            const r4 = getRandomInt(5, 10);
+            const t4 = getRandomInt(3, 7);
+            const freqObj4 = getRandomChoice([
+                { name: "quarterly", m: 4 },
+                { name: "semiannually", m: 2 }
+            ]);
+            const ans4 = a4 * Math.pow(1 + (r4 / 100) / freqObj4.m, -freqObj4.m * t4);
+            list.push({
+                topic: "Present Value Compound",
+                question: `What present value invested today at ${r4}% per year compounded ${freqObj4.name} will yield $${a4.toLocaleString()} due in ${t4} years for stunt budget funding?`,
+                unit: "$",
+                numericAnswer: parseFloat(ans4.toFixed(2)),
+                correctFormula: standardFormulas.compoundPV,
+                distractors: [standardFormulas.simpleInterest, standardFormulas.effectiveRate, standardFormulas.annuityFV],
+                correctFormulaText: `<i>P</i> = <i>A</i>(1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup>-<i>m</i>·<i>t</i></sup> &nbsp;&nbsp;➔&nbsp;&nbsp; <i>P</i> = ${a4} × (1 + <div class='math-frac'><span class='math-num'>${r4/100}</span><span class='math-den'>${freqObj4.m}</span></div>)<sup>-${freqObj4.m * t4}</sup>`,
+                keywords: ["present value", "yield $", `compounded ${freqObj4.name}`],
+                wrongFormulaHint: "We are discounting a future lump sum. Use Present Value P = A(1 + r/m)⁻ᵐ·ᵗ!",
+                wrongCalcHint: `Compute ${a4} × (1 + ${r4/100}/${freqObj4.m})^(-${freqObj4.m * t4}).`
+            });
 
-            dialogueEl.innerText = `"${msg}"`;
+            // Q5: Short term Simple Interest total
+            const p5 = getRandomInt(20, 50) * 100;
+            const r5 = getRandomInt(8, 14);
+            const months5 = getRandomChoice([3, 6, 9]);
+            const t5 = months5 / 12;
+            const ans5 = p5 * (1 + (r5 / 100) * t5);
+            list.push({
+                topic: "Short-term Simple Interest Loan",
+                question: `The director took a short-term bridge loan of $${p5.toLocaleString()} for ${months5} months at ${r5}% simple interest per year. What is the total amount owed at maturity?`,
+                unit: "$",
+                numericAnswer: parseFloat(ans5.toFixed(2)),
+                correctFormula: standardFormulas.simpleTotal,
+                distractors: [standardFormulas.simpleInterest, standardFormulas.compoundAmt, standardFormulas.annuityPV],
+                correctFormulaText: `<i>A</i> = <i>P</i>(1 + <i>r</i>·<i>t</i>) &nbsp;&nbsp;➔&nbsp;&nbsp; <i>A</i> = ${p5} × (1 + ${r5/100} × <div class='math-frac'><span class='math-num'>${months5}</span><span class='math-den'>12</span></div>)`,
+                keywords: ["short-term loan", `${months5} months`, "total amount owed"],
+                wrongFormulaHint: "We want total amount owed (Principal + Simple Interest), so use A = P(1 + r·t)!",
+                wrongCalcHint: `Calculate time t = ${months5}/12 = ${t5}. Total = ${p5} × (1 + ${r5/100} × ${t5}).`
+            });
+
+            // Q6: Compound Interest Monthly
+            const p6 = getRandomInt(10, 30) * 1000;
+            const r6 = getRandomInt(4, 9);
+            const t6 = getRandomInt(10, 25);
+            const ans6 = p6 * Math.pow(1 + (r6 / 100) / 12, 12 * t6);
+            list.push({
+                topic: "Compound Interest Trust Fund",
+                question: `An actor's trust fund of $${p6.toLocaleString()} was created ${t6} years ago earning ${r6}% per year compounded monthly. How much is in the account today?`,
+                unit: "$",
+                numericAnswer: parseFloat(ans6.toFixed(2)),
+                correctFormula: standardFormulas.compoundAmt,
+                distractors: [standardFormulas.simpleInterest, standardFormulas.annuityFV, standardFormulas.effectiveRate],
+                correctFormulaText: `<i>A</i> = <i>P</i>(1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i>·<i>t</i></sup> &nbsp;&nbsp;➔&nbsp;&nbsp; <i>A</i> = ${p6} × (1 + <div class='math-frac'><span class='math-num'>${r6/100}</span><span class='math-den'>12</span></div>)<sup>(12×${t6})</sup>`,
+                keywords: ["compounded monthly", `${t6} years ago`],
+                wrongFormulaHint: "This is a single lump sum compounding over time monthly. Use A = P(1 + r/m)ᵐ·ᵗ!",
+                wrongCalcHint: `n = 12 × ${t6} = ${12 * t6}. Compute ${p6} × (1 + ${r6/100}/12)^${12 * t6}.`
+            });
+
+            // Q7: Future Value Ordinary Annuity
+            const rPay7 = getRandomInt(5, 25) * 100;
+            const rate7 = getRandomInt(4, 8);
+            const t7 = getRandomInt(5, 12);
+            const i7 = (rate7 / 100) / 12;
+            const n7 = 12 * t7;
+            const ans7 = rPay7 * ((Math.pow(1 + i7, n7) - 1) / i7);
+            list.push({
+                topic: "Future Value of Ordinary Annuity",
+                question: `To fund visual effects CGI, studio deposits $${rPay7.toLocaleString()} at the end of every month for ${t7} years into an account earning ${rate7}%/year compounded monthly. Find the future value.`,
+                unit: "$",
+                numericAnswer: parseFloat(ans7.toFixed(2)),
+                correctFormula: standardFormulas.annuityFV,
+                distractors: [standardFormulas.compoundAmt, standardFormulas.annuityPV, standardFormulas.simpleInterest],
+                correctFormulaText: `<i>S</i> = <i>R</i> · [<div class='math-frac'><span class='math-num'>(1 + <i>i</i>)<sup><i>n</i></sup> - 1</span><span class='math-den'><i>i</i></span></div>] &nbsp;&nbsp;➔&nbsp;&nbsp; <i>R</i>=${rPay7}, <i>i</i>=<div class='math-frac'><span class='math-num'>${rate7/100}</span><span class='math-den'>12</span></div>, <i>n</i>=${n7}`,
+                keywords: ["ordinary annuity", "end of every month", "future value"],
+                wrongFormulaHint: "Regular monthly payments! We need Future Value of Ordinary Annuity: S = R · [((1 + i)ⁿ - 1) / i].",
+                wrongCalcHint: `i = ${rate7/100}/12, n = ${n7}. Calculate ${rPay7} × [((1 + i)^${n7} - 1) / i].`
+            });
+
+            // Q8: Present Value Ordinary Annuity
+            const rPay8 = getRandomInt(10, 40) * 100;
+            const rate8 = getRandomInt(6, 12);
+            const t8 = getRandomInt(4, 10);
+            const i8 = (rate8 / 100) / 4;
+            const n8 = 4 * t8;
+            const ans8 = rPay8 * ((1 - Math.pow(1 + i8, -n8)) / i8);
+            list.push({
+                topic: "Present Value of Ordinary Annuity",
+                question: `Find the present value of an annuity consisting of quarterly payments of $${rPay8.toLocaleString()} for ${t8} years at ${rate8}% per year compounded quarterly.`,
+                unit: "$",
+                numericAnswer: parseFloat(ans8.toFixed(2)),
+                correctFormula: standardFormulas.annuityPV,
+                distractors: [standardFormulas.annuityFV, standardFormulas.compoundAmt, standardFormulas.effectiveRate],
+                correctFormulaText: `<i>P</i> = <i>R</i> · [<div class='math-frac'><span class='math-num'>1 - (1 + <i>i</i>)<sup>-<i>n</i></sup></span><span class='math-den'><i>i</i></span></div>] &nbsp;&nbsp;➔&nbsp;&nbsp; <i>R</i>=${rPay8}, <i>i</i>=<div class='math-frac'><span class='math-num'>${rate8/100}</span><span class='math-den'>4</span></div>, <i>n</i>=${n8}`,
+                keywords: ["present value", "ordinary annuity", "quarterly payments"],
+                wrongFormulaHint: "It explicitly asks for Present Value of an Ordinary Annuity! Use P = R · [(1 - (1 + i)⁻ⁿ) / i].",
+                wrongCalcHint: `i = ${rate8/100}/4, n = ${n8}. Compute ${rPay8} × [(1 - (1 + i)^(-${n8})) / i].`
+            });
+
+            // Q9: Effective Rate Monthly
+            const rate9 = getRandomInt(5, 11);
+            const ans9 = (Math.pow(1 + (rate9 / 100) / 12, 12) - 1) * 100;
+            list.push({
+                topic: "Effective Rate (Monthly Compounding)",
+                question: `Calculate the effective annual rate of interest equivalent to ${rate9}% per year compounded monthly (enter percentage value rounded to 2 decimals):`,
+                unit: "%",
+                numericAnswer: parseFloat(ans9.toFixed(2)),
+                correctFormula: standardFormulas.effectiveRate,
+                distractors: [standardFormulas.continuousComp, standardFormulas.simpleInterest, standardFormulas.annuityPV],
+                correctFormulaText: `<i>r</i><span class='math-sub'>eff</span> = (1 + <div class='math-frac'><span class='math-num'><i>r</i></span><span class='math-den'><i>m</i></span></div>)<sup><i>m</i></sup> - 1 &nbsp;&nbsp;➔&nbsp;&nbsp; <i>r</i><span class='math-sub'>eff</span> = (1 + <div class='math-frac'><span class='math-num'>${rate9/100}</span><span class='math-den'>12</span></div>)<sup>12</sup> - 1`,
+                keywords: ["effective annual rate", "compounded monthly"],
+                wrongFormulaHint: "Look for effective rate formula with monthly compounding m = 12!",
+                wrongCalcHint: `(1 + ${rate9/100}/12)^12 - 1, then convert to %.`
+            });
+
+            // Q10: Continuous Compounding
+            const p10 = getRandomInt(10, 50) * 1000;
+            const r10 = getRandomInt(4, 9);
+            const t10 = getRandomInt(3, 8);
+            const ans10 = p10 * Math.exp((r10 / 100) * t10);
+            list.push({
+                topic: "Continuous Compounding",
+                question: `Find the total accumulated amount after ${t10} years if $${p10.toLocaleString()} studio reserve fund is invested at ${r10}% per year compounded continuously.`,
+                unit: "$",
+                numericAnswer: parseFloat(ans10.toFixed(2)),
+                correctFormula: standardFormulas.continuousComp,
+                distractors: [standardFormulas.compoundAmt, standardFormulas.simpleInterest, standardFormulas.annuityFV],
+                correctFormulaText: `<i>A</i> = <i>P</i> · <i>e</i><sup><i>r</i>·<i>t</i></sup> &nbsp;&nbsp;➔&nbsp;&nbsp; <i>A</i> = ${p10} × <i>e</i><sup>(${(r10/100)} × ${t10})</sup>`,
+                keywords: ["compounded continuously"],
+                wrongFormulaHint: "The key term is 'compounded continuously'! That means eʳ·ᵗ continuous formula!",
+                wrongCalcHint: `Compute r·t = ${r10/100} × ${t10} = ${(r10/100)*t10}. Then ${p10} × e^(${(r10/100)*t10}).`
+            });
+
+            return list;
         }
 
-        function randomInt(min, max, step = 1) {
-            return Math.floor(Math.random() * ((max - min) / step + 1)) * step + min;
-        }
+        // Global Game State
+        let questionsData = [];
+        let currentQuestionIndex = 0;
+        let isFormulaSelected = false;
+        let isQuestionSolved = false;
+        let directorRage = 0; // 0: Calm, 1: Annoyed, 2: Angry, 3: Furious
+        
+        // Track Mistakes for end-of-exercise feedback
+        let formulaMistakesCount = 0;
+        let calcMistakesCount = 0;
 
-        function generateRandomizedModules() {
-            let p1 = randomInt(10, 50, 5) * 1000;
-            let r1 = randomInt(4, 12, 1);
-            let t1 = randomInt(2, 6, 1);
-            let i1 = Math.round(p1 * (r1 / 100) * t1);
-            let fv1 = p1 + i1;
+        const directorAngryDialogue = [
+            "Cut! Cut! That formula is completely wrong! Pay attention to the keywords in the script!",
+            "What are you doing?! We are burning $1,000 a minute here! Look at the problem keywords again!",
+            "NO NO NO! That calculation doesn't make financial sense! Use your Casio FX-570MS correctly!",
+            "My blood pressure is soaring! Check your numbers! Re-read the formula and calculate properly!"
+        ];
 
-            let p2 = randomInt(20, 80, 5) * 1000;
-            let r2 = randomInt(5, 12, 1);
-            let t2 = randomInt(3, 8, 1);
-            let fv2 = Math.round(p2 * Math.pow(1 + r2 / 100, t2));
+        function startExercise() {
+            questionsData = generateDynamicQuestions();
+            currentQuestionIndex = 0;
+            directorRage = 0;
+            formulaMistakesCount = 0;
+            calcMistakesCount = 0;
 
-            let p3 = randomInt(30, 90, 5) * 1000;
-            let annualR3 = randomInt(6, 16, 2);
-            let m3Arr = [2, 4, 12];
-            let m3 = m3Arr[Math.floor(Math.random() * m3Arr.length)];
-            let t3 = randomInt(2, 5, 1);
-            let periods3 = m3 * t3;
-            let ratePerPeriod3 = annualR3 / 100 / m3;
-            let fv3 = Math.round(p3 * Math.pow(1 + ratePerPeriod3, periods3));
-            let compoundingName3 = m3 === 2 ? "semi-annually" : (m3 === 4 ? "quarterly" : "monthly");
-
-            let p4 = randomInt(25, 75, 5) * 1000;
-            let r4 = randomInt(4, 10, 1);
-            let t4 = randomInt(3, 7, 1);
-            let fv4 = Math.round(p4 * Math.exp((r4 / 100) * t4));
-
-            let nominalR5 = randomInt(6, 14, 1);
-            let m5Arr = [2, 4, 12, 365];
-            let m5 = m5Arr[Math.floor(Math.random() * m5Arr.length)];
-            let eff5 = parseFloat((Math.pow(1 + (nominalR5 / 100) / m5, m5) - 1) * 100).toFixed(2);
-            let freqName5 = m5 === 2 ? "semi-annual" : (m5 === 4 ? "quarterly" : (m5 === 12 ? "monthly" : "daily"));
-
-            let targetFv6 = randomInt(80, 200, 10) * 1000;
-            let r6 = randomInt(5, 12, 1);
-            let t6 = randomInt(3, 8, 1);
-            let pv6 = Math.round(targetFv6 / Math.pow(1 + r6 / 100, t6));
-
-            let pmt7 = randomInt(5, 15, 1) * 1000;
-            let r7 = randomInt(5, 10, 1);
-            let t7 = randomInt(4, 10, 1);
-            let fvAnnuity7 = Math.round(pmt7 * ((Math.pow(1 + r7 / 100, t7) - 1) / (r7 / 100)));
-
-            let pmt8 = randomInt(4, 12, 1) * 1000;
-            let r8 = randomInt(6, 12, 1);
-            let t8 = randomInt(4, 10, 1);
-            let pvAnnuity8 = Math.round(pmt8 * ((1 - Math.pow(1 + r8 / 100, -t8)) / (r8 / 100)));
-
-            let pmt9 = randomInt(5, 15, 1) * 1000;
-            let annualR9 = randomInt(6, 12, 2);
-            let m9 = 12;
-            let t9 = randomInt(2, 5, 1);
-            let totalPeriods9 = m9 * t9;
-            let iPer9 = annualR9 / 100 / m9;
-            let fvNonAnnuity9 = Math.round(pmt9 * ((Math.pow(1 + iPer9, totalPeriods9) - 1) / iPer9));
-
-            let pmt10 = randomInt(8, 20, 1) * 1000;
-            let annualR10 = randomInt(6, 12, 2);
-            let m10 = 4;
-            let t10 = randomInt(3, 6, 1);
-            let totalPeriods10 = m10 * t10;
-            let iPer10 = annualR10 / 100 / m10;
-            let pvNonAnnuity10 = Math.round(pmt10 * ((1 - Math.pow(1 + iPer10, -totalPeriods10)) / iPer10));
-
-            modulesData = [
-                {
-                    category: "1) Simple Interest",
-                    title: "Corporate Loan Simple Interest",
-                    rewardPerStep: 12000,
-                    problem: `The corporation takes a short-term bank loan of $${p1.toLocaleString()} at a simple interest rate of ${r1}% per annum for ${t1} years.`,
-                    prompt: `Determine the total accumulated payout (initial principal plus earned interest) at the end of the term.`,
-                    correct: `$${fv1.toLocaleString()}`,
-                    options: [`$${(fv1 - randomInt(2, 5, 1) * 1500).toLocaleString()}`, `$${fv1.toLocaleString()}`, `$${(fv1 + randomInt(2, 5, 1) * 2000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Interest earned is $${i1.toLocaleString()} over ${t1} years. Adding this interest to the initial principal of $${p1.toLocaleString()} gives a total future value of $${fv1.toLocaleString()}.`
-                },
-                {
-                    category: "2) Compound Interest (Annual)",
-                    title: "Expansion Capital Growth",
-                    rewardPerStep: 14000,
-                    problem: `An investment fund deposits $${p2.toLocaleString()} in an account paying ${r2}% compounded annually for ${t2} years.`,
-                    prompt: `Determine the total projected value of this investment at the end of the period.`,
-                    correct: `$${fv2.toLocaleString()}`,
-                    options: [`$${(fv2 - 7500).toLocaleString()}`, `$${fv2.toLocaleString()}`, `$${(fv2 + 9000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `With annual compounding at ${r2}% over ${t2} years, the investment compounds across each period to reach a total future value of $${fv2.toLocaleString()}.`
-                },
-                {
-                    category: "3) Non-Annual Compounding",
-                    title: "Quarterly Corporate Reserve Growth",
-                    rewardPerStep: 16000,
-                    problem: `A reserve fund of $${p3.toLocaleString()} is invested at ${annualR3}% compounded ${compoundingName3} for ${t3} years.`,
-                    prompt: `Determine the final accumulated balance after all compounding intervals are applied over the ${t3} years.`,
-                    correct: `$${fv3.toLocaleString()}`,
-                    options: [`$${(fv3 - 8000).toLocaleString()}`, `$${fv3.toLocaleString()}`, `$${(fv3 + 11000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Dividing the ${annualR3}% annual rate across ${m3} compounding intervals per year for ${t3} years results in a final future value of $${fv3.toLocaleString()}.`
-                },
-                {
-                    category: "4) Continuous Compounding",
-                    title: "Venture Capital Continuous Growth",
-                    rewardPerStep: 18000,
-                    problem: `A venture capital portfolio of $${p4.toLocaleString()} grows continuously at a nominal rate of ${r4}% per annum for ${t4} years.`,
-                    prompt: `Determine the final portfolio valuation under continuous growth conditions.`,
-                    correct: `$${fv4.toLocaleString()}`,
-                    options: [`$${(fv4 - 6000).toLocaleString()}`, `$${fv4.toLocaleString()}`, `$${(fv4 + 8500).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Continuous compounding of $${p4.toLocaleString()} at ${r4}% for ${t4} years yields an accumulated amount of $${fv4.toLocaleString()}.`
-                },
-                {
-                    category: "5) Effective Interest Rate",
-                    title: "Effective Annual Rate (EFF)",
-                    rewardPerStep: 15000,
-                    problem: `A corporate credit facility has a nominal annual rate of ${nominalR5}% compounded ${freqName5}.`,
-                    prompt: `Determine the true effective annual interest rate percentage accounting for frequent compounding.`,
-                    correct: `${eff5}%`,
-                    options: [`${(parseFloat(eff5) - 0.45).toFixed(2)}%`, `${eff5}%`, `${(parseFloat(eff5) + 0.55).toFixed(2)}%`].sort(() => Math.random() - 0.5),
-                    explanation: `Accounting for ${m5} compounding periods per year on a ${nominalR5}% nominal rate yields an effective annual rate of ${eff5}%.`
-                },
-                {
-                    category: "6) Present Value (Compound)",
-                    title: "Discounting Future Corporate Asset",
-                    rewardPerStep: 16000,
-                    problem: `The firm expects to receive $${targetFv6.toLocaleString()} in ${t6} years. The appropriate discount rate is ${r6}% compounded annually.`,
-                    prompt: `Determine the present worth of this future cash influx in today's dollars.`,
-                    correct: `$${pv6.toLocaleString()}`,
-                    options: [`$${(pv6 - 7000).toLocaleString()}`, `$${pv6.toLocaleString()}`, `$${(pv6 + 8500).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Discounting the future sum of $${targetFv6.toLocaleString()} back over ${t6} years at ${r6}% gives a present value of $${pv6.toLocaleString()}.`
-                },
-                {
-                    category: "7) Future Value of Annuity",
-                    title: "Sinking Fund Annual Deposit",
-                    rewardPerStep: 18000,
-                    problem: `The firm deposits $${pmt7.toLocaleString()} at the end of each year for ${t7} years into an account earning ${r7}% compounded annually.`,
-                    prompt: `Determine the total accumulated sum of these regular annuity deposits by the end of the term.`,
-                    correct: `$${fvAnnuity7.toLocaleString()}`,
-                    options: [`$${(fvAnnuity7 - 12000).toLocaleString()}`, `$${fvAnnuity7.toLocaleString()}`, `$${(fvAnnuity7 + 15000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Accumulating annual deposits of $${pmt7.toLocaleString()} at ${r7}% over ${t7} years produces a total future value of $${fvAnnuity7.toLocaleString()}.`
-                },
-                {
-                    category: "8) Present Value of Annuity",
-                    title: "Equipment Lease Present Value",
-                    rewardPerStep: 20000,
-                    problem: `An equipment lease requires year-end payments of $${pmt8.toLocaleString()} for ${t8} years at ${r8}% annual interest.`,
-                    prompt: `Determine the lump-sum equivalent value in today's capital for all scheduled lease payments.`,
-                    correct: `$${pvAnnuity8.toLocaleString()}`,
-                    options: [`$${(pvAnnuity8 - 10000).toLocaleString()}`, `$${pvAnnuity8.toLocaleString()}`, `$${(pvAnnuity8 + 14000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Discounting ${t8} year-end payments of $${pmt8.toLocaleString()} at ${r8}% results in a present value of $${pvAnnuity8.toLocaleString()}.`
-                },
-                {
-                    category: "9) FV of Non-Annual Annuity",
-                    title: "Monthly Pension Fund Accumulation",
-                    rewardPerStep: 22000,
-                    problem: `The firm deposits $${pmt9.toLocaleString()} at the end of every month for ${t9} years into a fund earning ${annualR9}% compounded monthly.`,
-                    prompt: `Determine the aggregate future portfolio balance after all monthly contributions and interest are combined.`,
-                    correct: `$${fvNonAnnuity9.toLocaleString()}`,
-                    options: [`$${(fvNonAnnuity9 - 15000).toLocaleString()}`, `$${fvNonAnnuity9.toLocaleString()}`, `$${(fvNonAnnuity9 + 18000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Making monthly deposits of $${pmt9.toLocaleString()} over ${t9} years at ${annualR9}% compounded monthly accumulates to $${fvNonAnnuity9.toLocaleString()}.`
-                },
-                {
-                    category: "10) PV of Non-Annual Annuity",
-                    title: "Quarterly Corporate Payout Valuation",
-                    rewardPerStep: 25000,
-                    problem: `A corporate trust pays $${pmt10.toLocaleString()} at the end of every quarter for ${t10} years, discounted at ${annualR10}% compounded quarterly.`,
-                    prompt: `Determine the combined present lump-sum valuation for these recurring quarterly payouts.`,
-                    correct: `$${pvNonAnnuity10.toLocaleString()}`,
-                    options: [`$${(pvNonAnnuity10 - 20000).toLocaleString()}`, `$${pvNonAnnuity10.toLocaleString()}`, `$${(pvNonAnnuity10 + 25000).toLocaleString()}`].sort(() => Math.random() - 0.5),
-                    explanation: `Discounting quarterly payments of $${pmt10.toLocaleString()} over ${t10} years at ${annualR10}% compounded quarterly yields a present value of $${pvNonAnnuity10.toLocaleString()}.`
-                }
-            ];
-        }
-
-        function initCanvas() {
-            canvas = document.getElementById('scratchpadCanvas');
-            if (!canvas) return;
-            ctx = canvas.getContext('2d');
-            
-            // Resize canvas to display resolution
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = canvas.parentElement.clientWidth || 400;
-            canvas.height = canvas.parentElement.clientHeight || 320;
-
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = document.getElementById('colorPicker')?.value || '#6366f1';
-
-            // Mouse events
-            canvas.onmousedown = startDrawing;
-            canvas.onmousemove = draw;
-            canvas.onmouseup = stopDrawing;
-            canvas.onmouseleave = stopDrawing;
-
-            // Touch events
-            canvas.ontouchstart = (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousedown', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
-            };
-            canvas.ontouchmove = (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
-                });
-                canvas.dispatchEvent(mouseEvent);
-            };
-            canvas.ontouchend = (e) => {
-                e.preventDefault();
-                const mouseEvent = new MouseEvent('mouseup', {});
-                canvas.dispatchEvent(mouseEvent);
-            };
-        }
-
-        function startDrawing(e) {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            lastX = e.clientX - rect.left;
-            lastY = e.clientY - rect.top;
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(x, y);
-
-            if (currentTool === 'eraser') {
-                ctx.strokeStyle = '#030712'; // match background
-                ctx.lineWidth = 20;
-            } else {
-                ctx.strokeStyle = document.getElementById('colorPicker').value;
-                ctx.lineWidth = 3;
-            }
-            ctx.stroke();
-
-            let dist = Math.hypot(x - lastX, y - lastY);
-            totalPathLength += dist;
-            if (dist > 5) {
-                strokeCount++;
-                updateAIWorkingStatus();
-            }
-
-            lastX = x;
-            lastY = y;
-        }
-
-        function stopDrawing() {
-            if (isDrawing) {
-                isDrawing = false;
-            }
-        }
-
-        function setTool(tool) {
-            currentTool = tool;
-            let penBtn = document.getElementById('penBtn');
-            let eraserBtn = document.getElementById('eraserBtn');
-            if (tool === 'pen') {
-                penBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition cursor-pointer";
-                eraserBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition cursor-pointer";
-            } else {
-                eraserBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow transition cursor-pointer";
-                penBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-slate-300 hover:bg-slate-600 transition cursor-pointer";
-            }
-        }
-
-        function clearCanvas() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            strokeCount = 0;
-            totalPathLength = 0;
-            updateAIWorkingStatus();
-        }
-
-        function updateAIWorkingStatus() {
-            let badge = document.getElementById('aiMetricsBadge');
-            let statusText = document.getElementById('aiCheckText');
-            if (badge) badge.innerText = hasUploadedImage ? "Photo Attached" : `${strokeCount} strokes`;
-            if (statusText) {
-                if (hasUploadedImage || strokeCount > 15) {
-                    statusText.innerText = "Valid working verified!";
-                    statusText.className = "text-emerald-400";
-                } else if (strokeCount > 0) {
-                    statusText.innerText = "Partial working notes detected...";
-                    statusText.className = "text-amber-400";
-                } else {
-                    statusText.innerText = "Waiting for answer & working...";
-                    statusText.className = "text-amber-400";
-                }
-            }
-        }
-
-        function handleImageUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                let preview = document.getElementById('uploadedImagePreview');
-                let container = document.getElementById('uploadedImagePreviewContainer');
-                let status = document.getElementById('uploadStatusText');
-                if (preview && container && status) {
-                    preview.src = evt.target.result;
-                    container.classList.remove('hidden');
-                    hasUploadedImage = true;
-                    status.innerText = `Photo Attached: ${file.name} (100% Working Verified!)`;
-                    updateAIWorkingStatus();
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function triggerFileReplace() {
-            let fileInput = document.getElementById('imageUploadInput');
-            if (fileInput) fileInput.click();
-        }
-
-        function removeUploadedImage() {
-            let container = document.getElementById('uploadedImagePreviewContainer');
-            let status = document.getElementById('uploadStatusText');
-            let input = document.getElementById('imageUploadInput');
-            let cameraInput = document.getElementById('cameraCaptureInput');
-            if (container && status) {
-                container.classList.add('hidden');
-                if (input) input.value = '';
-                if (cameraInput) cameraInput.value = '';
-                hasUploadedImage = false;
-                status.innerText = "No photo attached yet. Draw on canvas or upload photo to earn 100% reward.";
-                updateAIWorkingStatus();
-            }
-        }
-
-        function startGame() {
-            currentModuleIndex = 0;
-            playerCash = 50000;
-            generateRandomizedModules();
-            
             document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('quizScreen').classList.remove('hidden');
+            updateRageUI();
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function loadQuestion(idx) {
+            isFormulaSelected = false;
+            isQuestionSolved = false;
+            const q = questionsData[idx];
+
+            document.getElementById('questionStepDisplay').innerText = `${idx + 1} / ${questionsData.length}`;
+            document.getElementById('questionTopic').innerText = q.topic;
+            document.getElementById('questionNumber').innerText = `Scene ${idx + 1} of ${questionsData.length}`;
+            document.getElementById('questionText').innerText = q.question;
+
+            // Reset phase indicators & formula box visibility
+            document.getElementById('phaseBadge').innerText = "Step 1: Formula Selection";
+            document.getElementById('phaseBadge').className = "text-[10px] font-bold px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30 uppercase";
+
+            document.getElementById('formulaDisplay').classList.add('hidden');
+            document.getElementById('formulaDisplay').innerHTML = '';
+
+            document.getElementById('directorSpeech').innerText = `"Alright team, scene ${idx + 1}! First, choose the exact formula needed so we don't ruin this budget!"`;
             
-            updateCashDisplay();
-            loadCurrentModule();
-            setBossMood('neutral', "Let's begin your evaluation. Show me your calculations!");
+            // Set units
+            document.getElementById('unitPrefix').style.display = q.unit === '$' ? 'inline' : 'none';
+            document.getElementById('unitSuffix').style.display = q.unit === '%' ? 'inline' : 'none';
+            document.getElementById('userCalcInput').value = '';
+
+            // Construct and shuffle 4 formula options
+            const options = [
+                { formulaObj: q.correctFormula, isCorrect: true },
+                ...q.distractors.map(d => ({ formulaObj: d, isCorrect: false }))
+            ];
+            
+            // Shuffle
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            q.currentShuffledOptions = options;
+
+            // Render Formula Options
+            const grid = document.getElementById('formulaOptionsGrid');
+            grid.innerHTML = '';
+            options.forEach((opt, fIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-slate-950 hover:bg-indigo-950/60 border border-slate-800 hover:border-indigo-500 p-3.5 rounded-xl text-xs sm:text-sm text-slate-200 transition flex items-center space-x-3 cursor-pointer";
+                btn.onclick = () => selectFormula(fIdx);
+                btn.innerHTML = `
+                    <span class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-indigo-400 shrink-0 text-xs">${String.fromCharCode(65 + fIdx)}</span>
+                    <span class="flex-grow font-semibold leading-normal">${opt.formulaObj.html}</span>
+                `;
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('formulaSection').classList.remove('hidden');
+            document.getElementById('calculationSection').classList.add('hidden');
+            document.getElementById('nextQuestionSection').classList.add('hidden');
         }
 
-        function updateCashDisplay() {
-            document.getElementById('cashDisplay').innerText = `$${playerCash.toLocaleString()}`;
+        function selectFormula(selectedIdx) {
+            if (isFormulaSelected) return;
+            const q = questionsData[currentQuestionIndex];
+            const chosen = q.currentShuffledOptions[selectedIdx];
+
+            if (chosen.isCorrect) {
+                // Correct Formula Selected!
+                isFormulaSelected = true;
+                if (directorRage > 0) directorRage--;
+                updateRageUI();
+
+                triggerDirectorReaction("HAPPY", `“Spot on! That's the exact formula we need! Now take out your Casio FX-570MS and compute the final figure!”`);
+
+                document.getElementById('phaseBadge').innerText = "Step 2: Calculation";
+                document.getElementById('phaseBadge').className = "text-[10px] font-bold px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/30 uppercase";
+
+                // Prepare formula HTML for display upon wrong answer submit
+                document.getElementById('formulaDisplay').innerHTML = `<strong>Confirmed Formula:</strong> ${q.correctFormulaText}`;
+                document.getElementById('formulaDisplay').classList.add('hidden');
+
+                document.getElementById('calculationSection').classList.remove('hidden');
+
+                // Disable formula options
+                const buttons = document.querySelectorAll('#formulaOptionsGrid button');
+                buttons.forEach((btn, idx) => {
+                    btn.disabled = true;
+                    if (q.currentShuffledOptions[idx].isCorrect) {
+                        btn.className = "w-full text-left bg-emerald-950/60 border-2 border-emerald-500 p-3.5 rounded-xl text-xs sm:text-sm text-emerald-200 flex items-center space-x-3";
+                    } else {
+                        btn.className = "w-full text-left bg-slate-950/40 border border-slate-800/40 p-3.5 rounded-xl text-xs sm:text-sm text-slate-600 opacity-50";
+                    }
+                });
+
+            } else {
+                // Wrong Formula Selected!
+                formulaMistakesCount++;
+                directorRage = Math.min(directorRage + 1, 3);
+                updateRageUI();
+                triggerShake();
+
+                const line = directorAngryDialogue[Math.floor(Math.random() * directorAngryDialogue.length)];
+                const keywordsText = q.keywords.map(k => `"${k}"`).join(', ');
+                triggerDirectorReaction("ANGRY", `“${line}”<br><br><span class="text-amber-300 font-semibold">💡 Director's Hint:</span> ${q.wrongFormulaHint} (Key terms: <span class="underline text-indigo-300">${keywordsText}</span>)`);
+            }
         }
 
-        function loadCurrentModule() {
-            if (currentModuleIndex >= modulesData.length) {
-                showEndScreen();
+        function verifyCalculation() {
+            if (!isFormulaSelected || isQuestionSolved) return;
+
+            const q = questionsData[currentQuestionIndex];
+            const rawVal = document.getElementById('userCalcInput').value.trim().replace(/[\$,%]/g, '');
+            const userNum = parseFloat(rawVal);
+
+            if (isNaN(userNum)) {
+                triggerDirectorReaction("ANGRY", "“Hey! Enter a valid number before hitting submit! Don't leave me hanging!”");
                 return;
             }
 
-            isAnswerLocked = false;
-            clearCanvas();
-            removeUploadedImage();
+            // Margin check
+            if (Math.abs(userNum - q.numericAnswer) <= 0.12) {
+                // Correct Answer!
+                isQuestionSolved = true;
+                if (directorRage > 0) directorRage = 0;
+                updateRageUI();
 
-            let mod = modulesData[currentModuleIndex];
-            document.getElementById('challengeCategory').innerText = mod.category;
-            document.getElementById('challengeTitle').innerText = mod.title;
-            document.getElementById('stepRewardDisplay').innerText = `$${mod.rewardPerStep.toLocaleString()}`;
-            document.getElementById('challengeProblem').innerText = mod.problem;
-            document.getElementById('stepPrompt').innerText = mod.prompt;
+                triggerDirectorReaction("HAPPY", `“BRILLIANT! That's correct (${q.numericAnswer.toLocaleString()}${q.unit})! Perfect shot! Moving on!”`);
+                
+                document.getElementById('userCalcInput').className = "bg-emerald-950/60 border-2 border-emerald-500 rounded-xl pl-7 pr-3 py-2.5 text-sm sm:text-base text-emerald-200 focus:outline-none w-full font-mono font-bold";
+                document.getElementById('nextQuestionSection').classList.remove('hidden');
 
-            let optContainer = document.getElementById('optionsContainer');
-            optContainer.innerHTML = '';
-
-            mod.options.forEach((opt) => {
-                let btn = document.createElement('button');
-                btn.className = "w-full text-left p-4 rounded-xl bg-slate-800/90 hover:bg-indigo-900/60 border border-slate-700 hover:border-indigo-500 font-semibold text-slate-200 transition shadow cursor-pointer";
-                btn.innerText = opt;
-                btn.onclick = () => selectAnswer(opt, btn);
-                optContainer.appendChild(btn);
-            });
-
-            document.getElementById('feedbackBox').classList.add('hidden');
-            document.getElementById('nextStepBtn').classList.add('hidden');
-        }
-
-        function selectAnswer(selectedOpt, btnElement) {
-            if (isAnswerLocked) return;
-            isAnswerLocked = true;
-
-            let mod = modulesData[currentModuleIndex];
-            let isCorrect = (selectedOpt === mod.correct);
-
-            // Disable all options
-            let buttons = document.getElementById('optionsContainer').getElementsByTagName('button');
-            for (let b of buttons) {
-                b.disabled = true;
-                if (b.innerText === mod.correct) {
-                    b.className = "w-full text-left p-4 rounded-xl bg-emerald-950/80 border border-emerald-500 font-semibold text-emerald-200 shadow";
-                } else if (b === btnElement && !isCorrect) {
-                    b.className = "w-full text-left p-4 rounded-xl bg-rose-950/80 border border-rose-500 font-semibold text-rose-200 shadow";
-                } else {
-                    b.className = "w-full text-left p-4 rounded-xl bg-slate-900/50 border border-slate-800 font-semibold text-slate-500 opacity-60";
-                }
-            }
-
-            let hasWorking = hasUploadedImage || (strokeCount > 12);
-            let rewardEarned = 0;
-
-            let feedbackBox = document.getElementById('feedbackBox');
-            feedbackBox.classList.remove('hidden');
-
-            if (isCorrect) {
-                if (hasWorking) {
-                    rewardEarned = mod.rewardPerStep;
-                    playerCash += rewardEarned;
-                    feedbackBox.className = "p-4 rounded-xl mb-6 text-sm font-medium bg-emerald-950/80 border border-emerald-500 text-emerald-200 shadow-lg";
-                    feedbackBox.innerHTML = `<strong>✅ Excellent! Correct Answer & Valid Working Verified!</strong> You earned the full reward of <strong>+$${rewardEarned.toLocaleString()}</strong>.<br><span class="text-xs text-emerald-300 mt-1 block">${mod.explanation}</span>`;
-                    setBossMood('happy');
-                } else {
-                    rewardEarned = Math.round(mod.rewardPerStep * 0.25);
-                    playerCash += rewardEarned;
-                    feedbackBox.className = "p-4 rounded-xl mb-6 text-sm font-medium bg-amber-950/80 border border-amber-500 text-amber-200 shadow-lg";
-                    feedbackBox.innerHTML = `<strong>⚠️ Correct Answer, but Insufficient Working!</strong> Without working notes, Director Vance awards only 25% reward (<strong>+$${rewardEarned.toLocaleString()}</strong>).<br><span class="text-xs text-amber-300 mt-1 block">${mod.explanation}</span>`;
-                    setBossMood('angry', "You got the right answer, but where is your rigorous financial working? Partial credit only!");
-                }
             } else {
-                feedbackBox.className = "p-4 rounded-xl mb-6 text-sm font-medium bg-rose-950/80 border border-rose-500 text-rose-200 shadow-lg";
-                feedbackBox.innerHTML = `<strong>❌ Incorrect Financial Projection!</strong> The correct answer is <strong>${mod.correct}</strong>. No capital added.<br><span class="text-xs text-rose-300 mt-1 block">${mod.explanation}</span>`;
-                setBossMood('angry');
+                // Wrong Answer!
+                calcMistakesCount++;
+                directorRage = Math.min(directorRage + 1, 3);
+                updateRageUI();
+                triggerShake();
+
+                // Show the formula display box on wrong answer
+                document.getElementById('formulaDisplay').classList.remove('hidden');
+
+                triggerDirectorReaction("ANGRY", `“WRONG NUMBER! My accountant is having a heart attack! Re-check your Casio calculations!”<br><br><span class="text-amber-300 font-semibold">💡 Director's Hint:</span> ${q.wrongCalcHint}`);
+                document.getElementById('userCalcInput').className = "bg-rose-950/60 border-2 border-rose-500 rounded-xl pl-7 pr-3 py-2.5 text-sm sm:text-base text-rose-200 focus:outline-none w-full font-mono";
             }
-
-            updateCashDisplay();
-            document.getElementById('nextStepBtn').classList.remove('hidden');
         }
 
-        function nextStep() {
-            currentModuleIndex++;
-            loadCurrentModule();
+        function triggerDirectorReaction(emotion, messageHTML) {
+            const avatar = document.getElementById('directorAvatar');
+            const speech = document.getElementById('directorSpeech');
+
+            speech.innerHTML = messageHTML;
+
+            if (emotion === "HAPPY") {
+                avatar.innerText = "🌟";
+                avatar.className = "w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-950 border-2 border-emerald-400 flex items-center justify-center text-3xl sm:text-4xl shadow-inner transition-transform duration-300 scale-105";
+            } else {
+                const angryAvatars = ["😠", "😡", "🤬", "🤯"];
+                avatar.innerText = angryAvatars[Math.min(directorRage, angryAvatars.length - 1)];
+                avatar.className = "w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-rose-950 border-2 border-rose-500 flex items-center justify-center text-3xl sm:text-4xl shadow-inner transition-transform duration-300 scale-105";
+            }
         }
 
-        function showEndScreen() {
+        function updateRageUI() {
+            const rageDisplay = document.getElementById('rageLevelDisplay');
+            const mainSec = document.getElementById('mainSection');
+            const rageLevels = [
+                { text: "Calm 🟢", color: "text-emerald-400" },
+                { text: "Annoyed 🟡", color: "text-amber-400" },
+                { text: "Furious 🔴", color: "text-rose-400" },
+                { text: "RAGE QUIT 💥", color: "text-rose-600 animate-pulse" }
+            ];
+
+            rageDisplay.innerText = rageLevels[directorRage].text;
+            rageDisplay.className = `text-sm sm:text-lg font-extrabold ${rageLevels[directorRage].color}`;
+
+            if (directorRage >= 2) {
+                mainSec.classList.add('angry-mode');
+            } else {
+                mainSec.classList.remove('angry-mode');
+            }
+        }
+
+        function triggerShake() {
+            const mainSec = document.getElementById('mainSection');
+            mainSec.classList.add('shake-animation');
+            setTimeout(() => {
+                mainSec.classList.remove('shake-animation');
+            }, 450);
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questionsData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
             document.getElementById('quizScreen').classList.add('hidden');
-            let endScreen = document.getElementById('endScreen');
-            endScreen.classList.remove('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
 
-            let titleEl = document.getElementById('endTitle');
-            let msgEl = document.getElementById('endMessage');
-            let iconEl = document.getElementById('endIcon');
-            let actionContainer = document.getElementById('endActionContainer');
-            actionContainer.innerHTML = '';
+            const totalMistakes = formulaMistakesCount + calcMistakesCount;
+            document.getElementById('totalMistakesDisplay').innerText = totalMistakes;
+            document.getElementById('formulaMistakesDisplay').innerText = formulaMistakesCount;
+            document.getElementById('calcMistakesDisplay').innerText = calcMistakesCount;
 
-            if (playerCash >= TARGET_CAPITAL) {
-                iconEl.innerHTML = "👑";
-                iconEl.className = "inline-block p-4 bg-amber-500/20 text-amber-400 rounded-full text-4xl mb-4 border border-amber-500/30 boss-celebrate";
-                titleEl.innerText = "Executive Partner Promotion Secured!";
-                msgEl.innerText = `Magnificent achievement! You successfully navigated all 10 corporate finance modules and accumulated $${playerCash.toLocaleString()} in capital, exceeding the $${TARGET_CAPITAL.toLocaleString()} boardroom target. Director Vance is profoundly impressed!`;
-                setBossMood('promotion', "Outstanding performance! You are promoted to Executive Partner of our firm!");
-            } else if (playerCash >= 100000) {
-                iconEl.innerHTML = "🏆";
-                iconEl.className = "inline-block p-4 bg-emerald-500/20 text-emerald-400 rounded-full text-4xl mb-4 border border-emerald-500/30";
-                titleEl.innerText = "Solid Corporate Analyst Performance!";
-                msgEl.innerText = `Good effort! You finished with $${playerCash.toLocaleString()}, which is respectable but below the $${TARGET_CAPITAL.toLocaleString()} Executive Partner target. Refine your calculations and try again!`;
-                setBossMood('encouragement', "Decent financial analysis, but you can achieve even greater capital growth with stricter accuracy.");
+            const resTitle = document.getElementById('resultTitle');
+            const resMessage = document.getElementById('resultMessage');
+            const resAvatar = document.getElementById('resultAvatar');
+            const resMood = document.getElementById('finalDirectorMood');
+            const card = document.getElementById('feedbackCard');
+
+            if (totalMistakes === 0) {
+                resAvatar.innerText = "🏆";
+                resTitle.innerText = "Flawless Take! Oscar Material!";
+                resMood.innerText = "Thrilled 🌟";
+                resMood.className = "text-xs font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                card.className = "bg-slate-950 p-5 rounded-2xl border-2 border-emerald-500 max-w-lg mx-auto text-left space-y-2 relative";
+                resMessage.innerText = `"BRAVO! Not a single mistake! You saved our production budget and executed every single formula with mathematical perfection!"`;
+            } else if (totalMistakes <= 3) {
+                resAvatar.innerText = "🎬";
+                resTitle.innerText = "That's a Wrap! Good Performance!";
+                resMood.innerText = "Satisfied 👍";
+                resMood.className = "text-xs font-extrabold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30";
+                card.className = "bg-slate-950 p-5 rounded-2xl border-2 border-indigo-500 max-w-lg mx-auto text-left space-y-2 relative";
+                resMessage.innerText = `"Solid work! A couple of minor mistakes along the way, but we finished on schedule and within budget. Well done!"`;
             } else {
-                iconEl.innerHTML = "⚠️";
-                iconEl.className = "inline-block p-4 bg-rose-500/20 text-rose-400 rounded-full text-4xl mb-4 border border-rose-500/30 boss-shake";
-                titleEl.innerText = "Boardroom Review Failed";
-                msgEl.innerText = `Your final capital stands at $${playerCash.toLocaleString()}, falling well short of corporate standards. Director Vance requires you to review your formulas and retake the evaluation.`;
-                setBossMood('furiousLow');
+                resAvatar.innerText = "😤";
+                resTitle.innerText = "Over Budget! Scene Cut!";
+                resMood.innerText = "Exhausted ⚠️";
+                resMood.className = "text-xs font-extrabold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                card.className = "bg-slate-950 p-5 rounded-2xl border-2 border-rose-500 max-w-lg mx-auto text-left space-y-2 relative";
+                resMessage.innerText = `"Phew! That was stressful! We made ${totalMistakes} mistakes during production. Re-read your formulas and practice with the Casio calculator again!"`;
             }
-
-            let restartBtn = document.createElement('button');
-            restartBtn.className = "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition cursor-pointer";
-            restartBtn.innerText = "Retake Boardroom Evaluation 🔄";
-            restartBtn.onclick = startGame;
-            actionContainer.appendChild(restartBtn);
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initCanvas();
-        });
+        // Calculator State
+        let calcFormula = "";
+        let calcAns = "0";
+        let isShift = false;
+        let isAlpha = false;
+
+        function updateLcdDisplay() {
+            document.getElementById('lcdFormula').innerText = calcFormula || "";
+            document.getElementById('lcdDisplay').innerText = calcFormula ? calcFormula : "0";
+            document.getElementById('indicatorShift').style.display = isShift ? 'inline-block' : 'none';
+            document.getElementById('indicatorAlpha').style.display = isAlpha ? 'inline-block' : 'none';
+        }
+
+        function insertChar(char) {
+            calcFormula += char;
+            resetShiftAlpha();
+            updateLcdDisplay();
+        }
+
+        function insertFunc(fnName) {
+            if (fnName === 'sqrt') calcFormula += 'Math.sqrt(';
+            else if (fnName === 'sqr') calcFormula += '^2';
+            else if (fnName === 'pow') calcFormula += '^';
+            else if (fnName === 'x^-1') calcFormula += '^-1';
+            else if (fnName === 'log') calcFormula += 'Math.log10(';
+            else if (fnName === 'ln') calcFormula += 'Math.log(';
+            else if (fnName === 'sin') calcFormula += 'Math.sin(';
+            else if (fnName === 'cos') calcFormula += 'Math.cos(';
+            else if (fnName === 'tan') calcFormula += 'Math.tan(';
+            else if (fnName === 'Ans') calcFormula += calcAns;
+            else if (fnName === 'EXP') calcFormula += '*10^';
+            else calcFormula += fnName;
+
+            resetShiftAlpha();
+            updateLcdDisplay();
+        }
+
+        function pressShift() {
+            isShift = !isShift;
+            isAlpha = false;
+            updateLcdDisplay();
+        }
+
+        function pressAlpha() {
+            isAlpha = !isAlpha;
+            isShift = false;
+            updateLcdDisplay();
+        }
+
+        function resetShiftAlpha() {
+            isShift = false;
+            isAlpha = false;
+        }
+
+        function pressDEL() {
+            if (calcFormula.length > 0) {
+                calcFormula = calcFormula.slice(0, -1);
+                updateLcdDisplay();
+            }
+        }
+
+        function pressAC() {
+            calcFormula = "";
+            resetShiftAlpha();
+            document.getElementById('lcdFormula').innerText = "";
+            document.getElementById('lcdDisplay').innerText = "0";
+        }
+
+        function pressON() {
+            pressAC();
+        }
+
+        function pressMode() {
+            // Reset state
+            pressAC();
+        }
+
+        function pressDirection(dir) {
+            // Visual replay feedback
+        }
+
+        function evaluateCasioFormula(expr) {
+            try {
+                let sanitized = expr
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/\^/g, '**')
+                    .replace(/e\^\(([^)]+)\)/g, 'Math.exp($1)')
+                    .replace(/e/g, 'Math.E');
+
+                // Evaluate math expression
+                let result = Function(`'use strict'; return (${sanitized})`)();
+                if (typeof result === 'number' && !isNaN(result)) {
+                    return result;
+                }
+                return "Syntax ERROR";
+            } catch (e) {
+                return "Syntax ERROR";
+            }
+        }
+
+        function calculateResult() {
+            if (!calcFormula) return;
+            const res = evaluateCasioFormula(calcFormula);
+            document.getElementById('lcdFormula').innerText = calcFormula + " =";
+            if (typeof res === 'number') {
+                const formatted = Number.isInteger(res) ? res.toString() : parseFloat(res.toFixed(4)).toString();
+                calcAns = formatted;
+                document.getElementById('lcdDisplay').innerText = formatted;
+            } else {
+                document.getElementById('lcdDisplay').innerText = res;
+            }
+            calcFormula = "";
+        }
+
+        function pasteCalcResult() {
+            const currentLcd = document.getElementById('lcdDisplay').innerText;
+            if (currentLcd && currentLcd !== "Syntax ERROR" && currentLcd !== "0") {
+                document.getElementById('userCalcInput').value = currentLcd;
+            }
+        }
     </script>
 </body>
 </html>
